@@ -57,9 +57,9 @@ class PushTest(QuiltTest):
             push = Push(tmp_test_dir.get_name(), pc_dir.get_name(),
                         patches_dir.get_name())
 
-            self.assertEquals(None, push.db.top_patch())
+            self.assertEqual(None, push.db.top_patch())
             push.apply_all(quiet=True)
-            self.assertEquals(patch2, push.db.top_patch())
+            self.assertEqual(patch2, push.db.top_patch())
 
             self.assertTrue(f1.exists())
             self.assertTrue(f2.exists())
@@ -84,16 +84,16 @@ class PushTest(QuiltTest):
 
             push = Push(tmp_test_dir.get_name(), pc_dir.get_name(),
                         patches_dir.get_name())
-            self.assertEquals(None, push.db.top_patch())
+            self.assertEqual(None, push.db.top_patch())
 
             push.apply_next_patch(quiet=True)
-            self.assertEquals(patch1, push.db.top_patch())
+            self.assertEqual(patch1, push.db.top_patch())
 
             self.assertTrue(f1.exists())
             self.assertFalse(f2.exists())
 
             push.apply_next_patch(quiet=True)
-            self.assertEquals(patch2, push.db.top_patch())
+            self.assertEqual(patch2, push.db.top_patch())
 
             self.assertTrue(f1.exists())
             self.assertTrue(f2.exists())
