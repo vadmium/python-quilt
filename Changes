@@ -23,6 +23,7 @@
           This fixes an issue when importing a patch in a not exiting patches
           directory.
         - TmpFile.file now has read-write access, not just read access
+        - Don't leak file descriptors when suppressing child process output
     * quilt/refresh.py
         - Fix filenames in the diff header
     * quilt/cli/next.py:
