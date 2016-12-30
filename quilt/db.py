@@ -288,7 +288,7 @@ class Db(PatchSeries):
         super(Db, self).__init__(dirname, "applied-patches")
 
     def _create_version(self, version_file):
-        with open(version_file, "w") as f:
+        with open(version_file, "w", encoding="ascii") as f:
             f.write(str(DB_VERSION))
 
     def create(self):
@@ -311,7 +311,8 @@ class Db(PatchSeries):
             version number """
         # The file contains a version number as a decimal integer, optionally
         # followed by a newline
-        with open(version_file, "r") as f:
+        f = open(version_file, "r", encoding="ascii", errors="replace")
+        with f:
             version = f.read(10)
 
         if len(version) >= 10 or version.rstrip("\r\n") != str(DB_VERSION):

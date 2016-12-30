@@ -42,8 +42,8 @@ class DbTest(QuiltTest):
         self.assertTrue(version.startswith(format(DB_VERSION)))
         with TmpDirectory() as dir:
             file = os.path.join(dir.get_name(), ".version")
-            with open(file, "wb") as file:
-                file.write(version.encode("ascii"))
+            with open(file, "w", encoding="ascii") as file:
+                file.write(version)
             self.assertRaises(DBError, Db, dir.get_name())
     
     def test_series(self):
