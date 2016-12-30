@@ -56,7 +56,7 @@ class Process(object):
             kw["stderr"] = open(os.devnull, "w")
         try:
             process = subprocess.Popen(self.cmd, **kw)
-        except OSError, e:
+        except OSError as e:
             raise SubprocessError(self.cmd, e.errno, e.strerror)
 
         if inputdata is not None:
