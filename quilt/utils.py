@@ -13,7 +13,6 @@ import inspect
 import os
 import os.path
 import shutil
-import six
 import subprocess
 import tempfile
 
@@ -168,7 +167,7 @@ class Directory(object):
             return self
         if isinstance(other, Directory):
             return Directory(os.path.join(self.dirname, other.dirname))
-        elif isinstance(other, six.string_types):
+        elif isinstance(other, str):
             return Directory(os.path.join(self.dirname, other))
         elif isinstance(other, File):
             return File(os.path.join(self.dirname, other.filename))

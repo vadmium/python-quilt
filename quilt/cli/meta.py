@@ -6,10 +6,7 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-from __future__ import print_function
-
 import os
-import six
 import sys
 
 from optparse import OptionParser
@@ -37,8 +34,7 @@ class CommandMetaClass(type):
         return cls
 
 
-@six.add_metaclass(CommandMetaClass)
-class Command(object):
+class Command(metaclass=CommandMetaClass):
 
     min_args = 0
     usage = ""
