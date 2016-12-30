@@ -45,7 +45,7 @@ class PushTest(QuiltTest):
             push = Push(tmp_test_dir.get_name(), pc_dir.get_name(),
                         patches_dir.get_name())
 
-            self.assertEqual(None, push.db.top_patch())
+            self.assertIsNone(push.db.top_patch())
             push.apply_all(quiet=True)
             self.assertEqual(patch2, push.db.top_patch())
 
@@ -72,7 +72,7 @@ class PushTest(QuiltTest):
 
             push = Push(tmp_test_dir.get_name(), pc_dir.get_name(),
                         patches_dir.get_name())
-            self.assertEqual(None, push.db.top_patch())
+            self.assertIsNone(push.db.top_patch())
 
             push.apply_next_patch(quiet=True)
             self.assertEqual(patch1, push.db.top_patch())

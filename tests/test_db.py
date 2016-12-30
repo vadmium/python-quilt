@@ -59,7 +59,7 @@ class DbTest(QuiltTest):
                           "patchwith", "lastpatch"]),
                           db.patches_after(thirdpatch))
         self.assertEqual([], db.patches_after(lastpatch))
-        self.assertEqual(None, db.patch_after(lastpatch))
+        self.assertIsNone(db.patch_after(lastpatch))
         self.assertEqual(thirdpatch, db.patch_after(secondpatch))
         self.assertEqual(patch_list(["firstpatch", "secondpatch",
                          "thirdpatch"]),

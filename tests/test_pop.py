@@ -42,7 +42,7 @@ class PopTest(QuiltTest):
 
             self.assertEqual(patch2, pop.db.top_patch())
             pop.unapply_all()
-            self.assertEqual(None, pop.db.top_patch())
+            self.assertIsNone(pop.db.top_patch())
 
             self.assertFalse(f1.exists())
             self.assertFalse(f2.exists())
@@ -75,7 +75,7 @@ class PopTest(QuiltTest):
             self.assertFalse(f2.exists())
 
             pop.unapply_top_patch()
-            self.assertEqual(None, pop.db.top_patch())
+            self.assertIsNone(pop.db.top_patch())
 
             self.assertFalse(f1.exists())
             self.assertFalse(f2.exists())
