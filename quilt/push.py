@@ -66,7 +66,7 @@ class Push(Command):
         elif pc_dir.is_empty():
             self.applied_empty_patch(patch, True)
         elif forced:
-            raise QuiltExceptions("Applied patch %s (forced; needs " \
+            raise QuiltError("Applied patch %s (forced; needs " \
                                     "refresh)" % patch.get_name())
         else:
             self.applied_patch(patch)
