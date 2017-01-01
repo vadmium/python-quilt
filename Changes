@@ -26,6 +26,9 @@
         - TmpFile.file now has read-write access, not just read access
     * quilt/refresh.py
         - Fix filenames in the diff header
+    * quilt/push.py:
+        - Allow pushing a patch even if a previous attempt failed
+        - Prevent pushing if the topmost patch needs refreshing first
     * quilt/cli/next.py:
         - Fix default behaviour without any patch argument
     * quilt/cli/previous.py:
