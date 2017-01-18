@@ -9,6 +9,7 @@
 from __future__ import print_function
 
 from argparse import ArgumentParser
+import inspect
 import os
 import six
 import sys
@@ -91,7 +92,7 @@ class Command(object):
 
     def parse(self, args):
         prog = "pquilt " + self.name
-        parser = ArgumentParser(prog=prog)
+        parser = ArgumentParser(prog=prog, description=inspect.getdoc(self))
         
         details = dict(self.params)
         params = _getargspec(self.run)

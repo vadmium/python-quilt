@@ -10,6 +10,8 @@ from quilt.cli.meta import Command
 from quilt.delete import Delete
 
 class DeleteCommand(Command):
+    """ Remove a patch from the series
+    """
 
     name  = "delete"
 

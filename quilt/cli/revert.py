@@ -12,6 +12,8 @@ from quilt.revert import Revert
 from quilt.cli.meta import Command
 
 class RevertCommand(Command):
+    """ Drop unrefreshed changes
+    """
 
     name = "revert"
 
