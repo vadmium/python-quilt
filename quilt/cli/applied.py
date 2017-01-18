@@ -12,9 +12,8 @@ from quilt.error import NoAppliedPatch
 class AppliedCommand(Command):
 
     name = "applied"
-    usage = "%prog applied"
 
-    def run(self, options, args):
+    def run(self):
         db = self.get_db()
 
         if not db.top_patch():

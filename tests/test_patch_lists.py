@@ -17,7 +17,7 @@ class Test(TestCase):
                 tmp_mapping(vars(sys)) as tmp_sys:
             tmp_sys.set("stderr", StringIO())
             with self.assertRaises(SystemExit) as caught:
-                PreviousCommand().run(None, [])
+                PreviousCommand().run()
             self.assertEqual(caught.exception.code, 1)
             self.assertIn("No patches applied", sys.stderr.getvalue())
     
@@ -25,7 +25,7 @@ class Test(TestCase):
         with self._setup_test_data(), \
                 tmp_mapping(vars(sys)) as tmp_sys:
             tmp_sys.set("stdout", StringIO())
-            NextCommand().run(None, [])
+            NextCommand().run()
             self.assertEqual("p1.patch\n", sys.stdout.getvalue())
     
     @contextmanager

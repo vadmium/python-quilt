@@ -12,16 +12,15 @@ from quilt.patch import Patch
 
 class PreviousCommand(Command):
 
-    usage = "%prog previous [patchname]"
     name = "previous"
 
-    def run(self, options, args):
+    def run(self, patchname=None):
         series = Series(self.get_patches_dir())
         db = Db(self.get_pc_dir())
 
         top = None
-        if len(args) > 0:
-            top = Patch(args[0])
+        if patchname is not None:
+            top = Patch(patchname)
         else:
             if db.exists():
                 top = db.top_patch()

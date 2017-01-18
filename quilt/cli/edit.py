@@ -12,11 +12,12 @@ from quilt.utils import SubprocessError, Process
 
 class EditCommand(Command):
 
-    usage = "%prog edit file1 [...]"
     name = "edit"
-    min_args = 1
 
-    def run(self, options, args):
+    params = dict(
+        args=dict(nargs="+", metavar="file"),
+    )
+    def run(self, *args):
         add = Add(self.get_cwd(), self.get_pc_dir(), self.get_patches_dir())
         add.add_files(args, ignore=True)
 

@@ -11,10 +11,9 @@ from quilt.db import Db
 
 class TopCommand(Command):
 
-    usage = "%prog top"
     name = "top"
 
-    def run(self, options, args):
+    def run(self):
         db = Db(self.get_pc_dir())
         top = db.top_patch()
         if not top:

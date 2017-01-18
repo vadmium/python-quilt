@@ -14,28 +14,22 @@ from quilt.utils import SubprocessError, Process
 
 class RefreshCommand(Command):
 
-    usage = "%prog refresh [patch]"
     name = "refresh"
 
-    def run(self, options, args):
+    def run(self, patch=None, edit=False):
         refresh = Refresh(os.getcwd(), self.get_pc_dir(),
                           self.get_patches_dir())
 
         refresh.refreshed.connect(self.refreshed)
 
-        if options.edit:
+        if edit:
             refresh.edit_patch.connect(self.edit_patch)
 
-        patch_name = None
-        if len(args) > 0:
-            patch_name = args[0]
-
-        refresh.refresh(patch_name, options.edit)
-
-    def add_args(self, parser):
-        parser.add_option("-e", "--edit", help="open patch in editor before " \
-                          "refreshing", dest="edit", action="store_true",
-                          default=False)
+        refresh.refresh(patch, edit)
+    params = dict(
+        edit=dict(short="-e", help="open patch in editor before " \
+                          "refreshing"),
+    )
 
     def edit_patch(self, tmpfile):
         editor = os.environ.get("EDITOR", "vi")

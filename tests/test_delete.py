@@ -32,15 +32,11 @@ class Test(QuiltTest):
             patch = os.path.join(dir.get_name(), "patch")
             with open(patch, "wb"):
                 pass
-            class options:
-                next = True
-                remove = True
-                backup = False
             with tmp_mapping(os.environ) as env, \
                     tmp_mapping(vars(sys)) as tmp_sys:
                 env.set("QUILT_PATCHES", patches.dirname)
                 env.set("QUILT_PC", dir.get_name())
                 tmp_sys.set("stdout", cStringIO())
-                DeleteCommand().run(options, [])
+                DeleteCommand().run(next=True, remove=True, backup=False)
             self.assertFalse(os.path.exists(patch))
             self.assertFalse(os.path.exists(patch + "~"))

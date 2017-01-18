@@ -11,10 +11,9 @@ from quilt.db import Series
 
 class SeriesCommand(Command):
 
-    usage = "%prog series"
     name = "series"
 
-    def run(self, option, args):
+    def run(self):
         series = Series(self.get_patches_dir())
         for patch in series.patches():
             print(patch)
