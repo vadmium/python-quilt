@@ -11,6 +11,7 @@ from quilt.db import Db, Series
 from quilt.patch import Patch
 
 class NextCommand(Command):
+    """ Print the name of the successor to a patch """
 
     name = "next"
 

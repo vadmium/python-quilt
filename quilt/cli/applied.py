@@ -10,6 +10,7 @@ from quilt.cli.meta import Command
 from quilt.error import NoAppliedPatch
 
 class AppliedCommand(Command):
+    """ List patches that have been pushed """
 
     name = "applied"
 

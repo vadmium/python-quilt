@@ -11,6 +11,7 @@ from quilt.cli.meta import Command
 from quilt.utils import SubprocessError, Process
 
 class EditCommand(Command):
+    """ Add files to the topmost patch and edit them """
 
     name = "edit"
 

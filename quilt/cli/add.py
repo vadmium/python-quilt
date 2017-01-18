@@ -12,6 +12,7 @@ from quilt.add import Add
 from quilt.cli.meta import Command
 
 class AddCommand(Command):
+    """ Mark files to be included in a patch """
 
     name = "add"
 

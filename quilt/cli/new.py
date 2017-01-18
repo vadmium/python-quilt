@@ -11,6 +11,7 @@ from quilt.error import PatchAlreadyExists
 from quilt.new import New
 
 class NewCommand(Command):
+    """ Add a blank unapplied patch to the series """
 
     name = "new"
 
