@@ -42,6 +42,9 @@
     * quilt/cli/previous.py:
         - Fix error message when the topmost patch is the first patch
         - Don't report first unapplied patch if no patches are applied
+    * quilt/cli/delete.py:
+        - Respect the "--backup" option, rather than always enabling it with
+          "-r"
     * pquilt:
         - Report errors to stderr rather than mixing with command output
 
