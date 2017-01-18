@@ -30,6 +30,8 @@
         - Allow pushing a patch even if a previous attempt failed
         - Prevent pushing if the topmost patch needs refreshing first
         - Fix error message when forcing
+        - Fix pushing up to a specific patch when some patches are already
+          applied
     * quilt/pop.py:
         - Fix error message when the patch needs refreshing
     * quilt/cli/next.py:
