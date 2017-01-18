@@ -34,6 +34,9 @@
           applied
     * quilt/pop.py:
         - Fix error message when the patch needs refreshing
+    * quilt/delete.py:
+        - Choose the first patch in "delete_next" rather than complaining no
+          patches are applied
     * quilt/cli/next.py:
         - Fix default behaviour without any patch argument
     * quilt/cli/previous.py:
