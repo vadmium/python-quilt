@@ -197,6 +197,14 @@ class DbTest(QuiltTest):
 
         patchline = db.patch2line[patch5]
         self.assertEqual(patchline.get_comment(), " my comment")
+    
+    def test_save(self):
+        with TmpDirectory() as dir:
+            series = Series(dir.get_name())
+            series.add_patch(Patch("name"))
+            series.save()
+            with open(series.series_file, "rb") as file:
+                self.assertEqual(file.read(), b"name\n")
 
 
 if __name__ == "__main__":
