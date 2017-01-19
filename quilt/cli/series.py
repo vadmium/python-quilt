@@ -7,7 +7,7 @@
 # See LICENSE comming with the source of python-quilt for details.
 
 from quilt.cli.meta import Command
-from quilt.db import Series
+from quilt.db import Db, Series
 
 class SeriesCommand(Command):
     """ List all applied and unapplied patches
@@ -15,7 +15,20 @@ class SeriesCommand(Command):
 
     name = "series"
 
-    def run(self):
+    def run(self, v=False):
         series = Series(self.get_patches_dir())
-        for patch in series.patches():
-            print(patch)
+        if v:
+            db = Db(self.get_pc_dir())
+            applied = db.patches()
+            for patch in applied[:-1]:
+                print("+ " + patch.get_name())
+            if applied:
+                print("= " + applied[-1].get_name())
+                patches = series.patches_after(applied[-1])
+            else:
+                patches = series.patches()
+            for patch in patches:
+                print("  " + patch.get_name())
+        else:
+            for patch in series.patches():
+                print(patch.get_name())
