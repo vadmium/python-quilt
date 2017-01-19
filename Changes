@@ -30,6 +30,8 @@
     * quilt/cli/previous.py:
         - Fix error message when the topmost patch is the first patch
         - Don't report first unapplied patch if no patches are applied
+    * pquilt:
+        - Report errors to stderr rather than mixing with command output
 
     API
     * quilt/add.py:
