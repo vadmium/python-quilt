@@ -27,7 +27,7 @@ class Patch(_EqBase):
             reverse=False, work_dir=None, force=False, dry_run=False,
             no_backup_if_mismatch=False, remove_empty_files=False,
             quiet=False, suppress_output=False):
-        cmd = ["patch"]
+        cmd = ["patch", "--binary"]
         cmd.append("-p" + str(self.strip))
 
         if backup:
