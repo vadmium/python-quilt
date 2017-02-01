@@ -7,7 +7,7 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-import os.path
+import os, os.path
 import six
 
 from helpers import QuiltTest, make_file
@@ -93,6 +93,25 @@ class PopTest(QuiltTest):
             with six.assertRaisesRegex(self, QuiltError,
                     r"needs to be refreshed"):
                 cmd.unapply_top_patch()
+
+    def test_file_open(self):
+        """ Pop a patch while a patched file is open
+        
+        This used to fail with PermissionError on Windows."""
+
+        with TmpDirectory() as dir:
+            applied = Db(os.path.join(dir.get_name(), ".pc"))
+            applied.add_patch(Patch("test.patch"))
+            applied.save()
+            orig = os.path.join(applied.dirname, "test.patch")
+            os.mkdir(orig)
+            make_file(b"original\n", orig, "test-file")
+            path = os.path.join(dir.get_name(), "test-file")
+            make_file(b"changed\n", path)
+            with open(path, "rb") as file:
+                q = Pop(dir.get_name(), applied.dirname)
+                q.unapply_top_patch()
+                self.assertEqual(file.read(), b"original\n")
 
 
 if __name__ == "__main__":
