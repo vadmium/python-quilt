@@ -41,6 +41,7 @@ class DeleteCommand(Command):
         if args.next:
             delete.delete_next(args.remove, args.backup)
         else:
+            #todo: check if unrefreshed changes
             delete.delete_patch(args.patch, args.remove, args.remove)
 
     def deleted_patch(self, patch):
