@@ -30,7 +30,7 @@ class Delete(Command):
         self.quilt_patches = Directory(quilt_patches)
         self.db = Db(quilt_pc)
         self.series = Series(quilt_patches)
-        self.pop = Pop(cwd, quilt_pc)
+        self.pop = Pop(cwd, quilt_pc, quilt_patches)
 
     def _delete_patch(self, patch, remove=False, backup=False):
         if self.series.is_empty():
@@ -42,7 +42,7 @@ class Delete(Command):
         self.deleting_patch(patch, applied)
 
         if applied:
-            self.pop._unapply_patch(patch)
+            self.pop._unapply_patch(patch, force=False)
             self.db = self.pop.db
             self.db.save()
 

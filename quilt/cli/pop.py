@@ -24,7 +24,7 @@ class PopCommand(Command):
     patch = Argument(nargs="?")
 
     def run(self, args):
-        pop = Pop(os.getcwd(), self.get_pc_dir())
+        pop = Pop(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
         pop.unapplying.connect(self.unapplying)
         pop.unapplied.connect(self.unapplied)
         pop.empty_patch.connect(self.empty_patch)
