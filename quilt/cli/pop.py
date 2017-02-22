@@ -22,6 +22,7 @@ class PopCommand(Command):
                          help="remove all applied patches")
 
     patch = Argument(nargs="?")
+    #~ force
 
     def run(self, args):
         pop = Pop(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
