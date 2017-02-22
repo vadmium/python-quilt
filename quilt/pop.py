@@ -6,7 +6,8 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-import os.path
+from errno import ENOENT
+import os.path, os
 
 from quilt.command import Command
 from quilt.db import Db, Series
@@ -15,6 +16,9 @@ from quilt.patch import RollbackPatch, Patch
 from quilt.signals import Signal
 from quilt.utils import Directory, File
 
+class _TimestampModified(Exception):
+    pass
+
 class Pop(Command):
 
     unapplying = Signal()
@@ -22,10 +26,11 @@ class Pop(Command):
     unapplied_patch = Signal()
     empty_patch = Signal()
 
-    def __init__(self, cwd, quilt_pc):
+    def __init__(self, cwd, quilt_pc, patches_dir=None):
         super(Pop, self).__init__(cwd)
         self.quilt_pc = Directory(quilt_pc)
         self.db = Db(quilt_pc)
+        self._patches = patches_dir
 
     def _check(self, force=False):
         if not self.db.exists() or not self.db.patches():
@@ -39,12 +44,44 @@ class Pop(Command):
                                 patch.get_name())
 
 
-    def _unapply_patch(self, patch):
+    def _check_timestamps(self, pc, patch):
+        try:
+            timestamp = os.stat(os.path.join(pc, ".timestamp")).st_mtime
+            if self._patches is not None:
+                patch = os.stat(os.path.join(self._patches, patch))
+                if patch.st_mtime >= timestamp:
+                    raise _TimestampModified("Patch file modified")
+        except OSError as err:
+            if err.errno != ENOENT:
+                raise
+            raise _TimestampModified("Patch or original timestamp missing")
+        for [dirpath, dirnames, filenames] in os.walk(pc):
+            for file in filenames:
+                if file == ".timestamp":
+                    continue
+                file = os.path.join(os.path.relpath(dirpath, pc), file)
+                try:
+                    file_stat = os.stat(os.path.join(self.cwd, file))
+                except OSError as err:
+                    if err.errno != ENOENT:
+                        raise
+                    raise _TimestampModified("File {} missing".format(file))
+                if file_stat.st_mtime >= timestamp:
+                    raise _TimestampModified("File {} modified".format(file))
+    
+    def _unapply_patch(self, patch, force):
         self.unapplying(patch)
 
         patch_name = patch.get_name()
         pc_dir = self.quilt_pc + patch_name
         timestamp = pc_dir + File(".timestamp")
+        if not force:
+            #~ try:
+                self._check_timestamps(pc_dir.get_name(), patch_name)
+            #~ except _TimestampModified
+            # copy original (.pc/PATCH/) files into temp working dir
+            # patch(no_backup_if_mismatch=True, force=True)
+            # compare each patched file (or /dev/null); fail pop if any are different
         timestamp.delete_if_exists()
 
         if pc_dir.is_empty():
@@ -69,7 +106,7 @@ class Pop(Command):
 
         patches = self.db.patches_after(Patch(patch_name))
         for patch in reversed(patches):
-            self._unapply_patch(patch)
+            self._unapply_patch(patch, force=force)
 
         self.db.save()
 
@@ -80,7 +117,7 @@ class Pop(Command):
         self._check(force)
 
         patch = self.db.top_patch()
-        self._unapply_patch(patch)
+        self._unapply_patch(patch, force=force)
 
         self.db.save()
 
@@ -91,7 +128,7 @@ class Pop(Command):
         self._check(force)
 
         for patch in reversed(self.db.applied_patches()):
-            self._unapply_patch(patch)
+            self._unapply_patch(patch, force=force)
 
         self.db.save()
 
