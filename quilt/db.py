@@ -6,8 +6,6 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-from __future__ import print_function
-
 import getopt
 import os.path
 import sys

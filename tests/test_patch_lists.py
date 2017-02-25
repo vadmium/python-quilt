@@ -1,11 +1,12 @@
 """ Test operations that list patches """
 
 from contextlib import contextmanager
+from io import StringIO
 import os, os.path
 import sys
 from unittest import TestCase
 
-from helpers import StringIO, tmp_mapping
+from helpers import tmp_mapping
 
 from quilt.cli.next import NextCommand
 from quilt.cli.previous import PreviousCommand

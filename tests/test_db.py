@@ -20,10 +20,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA
 
+from io import StringIO
 import os.path
 import sys
 
-from helpers import QuiltTest, StringIO, tmp_mapping
+from helpers import QuiltTest, tmp_mapping
 
 test_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(test_dir, os.pardir))

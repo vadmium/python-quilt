@@ -1,8 +1,9 @@
+from io import StringIO
 import runpy
 import sys
 from unittest import TestCase
 
-from helpers import StringIO, tmp_mapping
+from helpers import tmp_mapping
 
 class Test(TestCase):
 
