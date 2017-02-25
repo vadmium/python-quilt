@@ -20,11 +20,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301 USA
 
+from contextlib import redirect_stderr
 from io import StringIO
 import os.path
 import sys
 from tempfile import TemporaryDirectory
-from unittest import mock
 
 from helpers import QuiltTest
 
@@ -105,7 +105,7 @@ class DbTest(QuiltTest):
             series = Series(dir)
             with open(series.series_file, "wb") as file:
                 file.write(b"patch -X\n")
-            with mock.patch("sys.stderr", StringIO()):
+            with redirect_stderr(StringIO()):
                 series.read()
                 self.assertIn("-X", sys.stderr.getvalue())
 

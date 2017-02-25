@@ -1,7 +1,7 @@
 """ Test operations that list patches """
 
 from contextlib import contextmanager
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 from io import StringIO
 import os.path
 import sys
@@ -15,7 +15,7 @@ class Test(TestCase):
 
     def test_previous_only_unapplied(self):
         with self._setup_test_data(), \
-                mock.patch("sys.stderr", StringIO()):
+                redirect_stderr(StringIO()):
             with self.assertRaises(SystemExit) as caught:
                 PreviousCommand().run(None, [])
             self.assertEqual(caught.exception.code, 1)
