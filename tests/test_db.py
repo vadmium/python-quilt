@@ -24,8 +24,9 @@ from io import StringIO
 import os.path
 import sys
 from tempfile import TemporaryDirectory
+from unittest import mock
 
-from helpers import QuiltTest, tmp_mapping
+from helpers import QuiltTest
 
 test_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(test_dir, os.pardir))
@@ -104,8 +105,7 @@ class DbTest(QuiltTest):
             series = Series(dir)
             with open(series.series_file, "wb") as file:
                 file.write(b"patch -X\n")
-            with tmp_mapping(vars(sys)) as tmp_sys:
-                tmp_sys.set("stderr", StringIO())
+            with mock.patch("sys.stderr", StringIO()):
                 series.read()
                 self.assertIn("-X", sys.stderr.getvalue())
 

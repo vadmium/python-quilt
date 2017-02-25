@@ -2,11 +2,10 @@
 
 from contextlib import contextmanager
 from io import StringIO
-import os, os.path
+import os.path
 import sys
+from unittest import mock
 from unittest import TestCase
-
-from helpers import tmp_mapping
 
 from quilt.cli.next import NextCommand
 from quilt.cli.previous import PreviousCommand
@@ -15,8 +14,7 @@ class Test(TestCase):
 
     def test_previous_only_unapplied(self):
         with self._setup_test_data(), \
-                tmp_mapping(vars(sys)) as tmp_sys:
-            tmp_sys.set("stderr", StringIO())
+                mock.patch("sys.stderr", StringIO()):
             with self.assertRaises(SystemExit) as caught:
                 PreviousCommand().run(None, [])
             self.assertEqual(caught.exception.code, 1)
@@ -24,8 +22,7 @@ class Test(TestCase):
     
     def test_next_topmost(self):
         with self._setup_test_data(), \
-                tmp_mapping(vars(sys)) as tmp_sys:
-            tmp_sys.set("stdout", StringIO())
+                mock.patch("sys.stdout", StringIO()):
             NextCommand().run(None, [])
             self.assertEqual("p1.patch\n", sys.stdout.getvalue())
     
@@ -35,7 +32,8 @@ class Test(TestCase):
         patches = os.path.join(data, "push", "test2", "patches")
         no_applied = os.path.join(data, "push", "test2")
         
-        with tmp_mapping(os.environ) as env:
-            env.set("QUILT_PATCHES", patches)
-            env.set("QUILT_PC", no_applied)
+        with mock.patch.dict("os.environ", (
+            ("QUILT_PATCHES", patches),
+            ("QUILT_PC", no_applied),
+        )):
             yield
