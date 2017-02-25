@@ -1,3 +1,4 @@
+from contextlib import redirect_stdout
 from io import StringIO
 import runpy
 import sys
@@ -8,7 +9,7 @@ class Test(TestCase):
 
     def test_registration(self):
         with mock.patch("sys.argv", ["pquilt", "push", "--help"]), \
-                mock.patch("sys.stdout", StringIO()):
+                redirect_stdout(StringIO()):
             try:
                 runpy.run_path("pquilt", run_name="__main__")
             except SystemExit as exit:

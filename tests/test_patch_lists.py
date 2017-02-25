@@ -1,6 +1,7 @@
 """ Test operations that list patches """
 
 from contextlib import contextmanager
+from contextlib import redirect_stdout
 from io import StringIO
 import os.path
 import sys
@@ -22,7 +23,7 @@ class Test(TestCase):
     
     def test_next_topmost(self):
         with self._setup_test_data(), \
-                mock.patch("sys.stdout", StringIO()):
+                redirect_stdout(StringIO()):
             NextCommand().run(None, [])
             self.assertEqual("p1.patch\n", sys.stdout.getvalue())
     
