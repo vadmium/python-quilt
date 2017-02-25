@@ -23,6 +23,7 @@
 import os.path
 import six
 import sys
+from tempfile import TemporaryDirectory
 
 from helpers import QuiltTest
 
@@ -100,14 +101,14 @@ class PopTest(QuiltTest):
             self.assertFalse(f2.exists())
     
     def test_unrefreshed(self):
-        with TmpDirectory() as dir:
-            db = Db(dir.get_name())
+        with TemporaryDirectory() as dir:
+            db = Db(dir)
             db.add_patch(Patch("unrefreshed.patch"))
             db.save()
             file = os.path.join(db.dirname, "unrefreshed.patch~refresh")
             with open(file, "w"):
                 pass
-            cmd = Pop(dir.get_name(), db.dirname)
+            cmd = Pop(dir, db.dirname)
             with six.assertRaisesRegex(self, QuiltError,
                     r"needs to be refreshed"):
                 cmd.unapply_top_patch()

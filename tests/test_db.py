@@ -23,6 +23,7 @@
 from io import StringIO
 import os.path
 import sys
+from tempfile import TemporaryDirectory
 
 from helpers import QuiltTest, tmp_mapping
 
@@ -31,7 +32,6 @@ sys.path.append(os.path.join(test_dir, os.pardir))
 
 from quilt.db import Db, DBError, DB_VERSION, PatchSeries, Series
 from quilt.db import Patch
-from quilt.utils import TmpDirectory
 
 def patch_list(patch_names):
     return [Patch(name) for name in patch_names]
@@ -41,11 +41,11 @@ class DbTest(QuiltTest):
     def test_version(self):
         version = "234\n"
         self.assertTrue(version.startswith(format(DB_VERSION)))
-        with TmpDirectory() as dir:
-            file = os.path.join(dir.get_name(), ".version")
+        with TemporaryDirectory() as dir:
+            file = os.path.join(dir, ".version")
             with open(file, "w", encoding="ascii") as file:
                 file.write(version)
-            self.assertRaises(DBError, Db, dir.get_name())
+            self.assertRaises(DBError, Db, dir)
     
     def test_series(self):
         firstpatch = Patch("firstpatch")
@@ -85,8 +85,8 @@ class DbTest(QuiltTest):
                           db.patches())
 
     def test_patch_args(self):
-        with TmpDirectory() as dir:
-            series = Series(dir.get_name())
+        with TemporaryDirectory() as dir:
+            series = Series(dir)
             with open(series.series_file, "wb") as file:
                 file.write(
                     b"patch1 -p0 --reverse\n"
@@ -100,8 +100,8 @@ class DbTest(QuiltTest):
             self.assertIs(patch2.reverse, True)
 
     def test_bad_args(self):
-        with TmpDirectory() as dir:
-            series = Series(dir.get_name())
+        with TemporaryDirectory() as dir:
+            series = Series(dir)
             with open(series.series_file, "wb") as file:
                 file.write(b"patch -X\n")
             with tmp_mapping(vars(sys)) as tmp_sys:
@@ -200,8 +200,8 @@ class DbTest(QuiltTest):
         self.assertEqual(patchline.get_comment(), " my comment")
     
     def test_save(self):
-        with TmpDirectory() as dir:
-            series = Series(dir.get_name())
+        with TemporaryDirectory() as dir:
+            series = Series(dir)
             series.add_patch(Patch("name"))
             series.save()
             with open(series.series_file, "rb") as file:

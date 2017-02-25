@@ -24,6 +24,7 @@ from contextlib import contextmanager
 import os, os.path
 import six
 import sys
+from tempfile import TemporaryDirectory
 
 from helpers import QuiltTest
 
@@ -140,10 +141,10 @@ class PushTest(QuiltTest):
     
     @contextmanager
     def _tmp_series(self):
-        with TmpDirectory() as dir:
-            patches = os.path.join(dir.get_name(), "patches")
+        with TemporaryDirectory() as dir:
+            patches = os.path.join(dir, "patches")
             os.mkdir(patches)
-            yield (dir.get_name(), Series(patches))
+            yield (dir, Series(patches))
     
     def _make_conflict(self, dir, series):
         series.add_patch(Patch("conflict.patch"))

@@ -1,18 +1,18 @@
 import os
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from quilt.db import Db, Patch
 from quilt.error import QuiltError
 import quilt.refresh
-from quilt.utils import TmpDirectory
 
 class Test(TestCase):
 
     def test_refresh(self):
-        with TmpDirectory() as dir:
+        with TemporaryDirectory() as dir:
             old_dir = os.getcwd()
             try:
-                os.chdir(dir.get_name())
+                os.chdir(dir)
                 db = Db(".pc")
                 db.create()
                 backup = os.path.join(".pc", "patch")
