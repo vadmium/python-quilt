@@ -6,17 +6,17 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-import os.path
+import os, os.path
 
 from quilt.command import Command
 from quilt.db import Db, Series
 from quilt.error import QuiltError
 from quilt.patch import Patch, Diff
 from quilt.signals import Signal
-from quilt.utils import Directory, File, TmpFile, _encode_str
+from quilt.utils import Directory, File, TmpFile
 
 INDEX_LINE = \
-    b"==================================================================="
+    "==================================================================="
 
 class Refresh(Command):
     """ Command class to refresh (add or remove chunks) a patch
@@ -110,8 +110,9 @@ class Refresh(Command):
         return (old_hdr, new_hdr, index)
 
     def _write_index(self, f, index):
-        f.write(b"Index: ")
-        f.write(_encode_str(index))
-        f.write(b"\n")
-        f.write(INDEX_LINE)
-        f.write(b"\n")
+        with os.fdopen(f.fd, "wt", newline="\n", closefd=False) as f:
+            f.write("Index: ")
+            f.write(index)
+            f.write("\n")
+            f.write(INDEX_LINE)
+            f.write("\n")
