@@ -22,7 +22,6 @@
 
 from contextlib import contextmanager
 import os, os.path
-import six
 import sys
 from tempfile import TemporaryDirectory
 
@@ -116,11 +115,10 @@ class PushTest(QuiltTest):
             self._make_conflict(dir, series)
             series.save()
             cmd = Push(dir, quilt_pc=dir, quilt_patches=series.dirname)
-            with six.assertRaisesRegex(
-                        self, QuiltError, r"does not apply"), \
+            with self.assertRaisesRegex(QuiltError, r"does not apply"), \
                     self._suppress_output():
                 cmd.apply_next_patch(quiet=True)
-            with six.assertRaisesRegex(self, QuiltError,
+            with self.assertRaisesRegex(QuiltError,
                         r"Applied patch.*needs refresh"), \
                     self._suppress_output():
                 cmd.apply_next_patch(quiet=True, force=True)
@@ -131,11 +129,11 @@ class PushTest(QuiltTest):
             series.add_patch("p2")
             series.save()
             cmd = Push(dir, quilt_pc=dir, quilt_patches=series.dirname)
-            with six.assertRaisesRegex(self, QuiltError,
+            with self.assertRaisesRegex(QuiltError,
                         r"Applied patch.*needs refresh"), \
                     self._suppress_output():
                 cmd.apply_next_patch(quiet=True, force=True)
-            with six.assertRaisesRegex(self, QuiltError,
+            with self.assertRaisesRegex(QuiltError,
                     r"needs to be refreshed"):
                 cmd.apply_next_patch()
     

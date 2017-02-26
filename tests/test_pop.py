@@ -21,7 +21,6 @@
 # 02110-1301 USA
 
 import os.path
-import six
 import sys
 from tempfile import TemporaryDirectory
 
@@ -109,7 +108,7 @@ class PopTest(QuiltTest):
             with open(file, "w"):
                 pass
             cmd = Pop(dir, db.dirname)
-            with six.assertRaisesRegex(self, QuiltError,
+            with self.assertRaisesRegex(QuiltError,
                     r"needs to be refreshed"):
                 cmd.unapply_top_patch()
 
