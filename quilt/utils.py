@@ -52,14 +52,10 @@ class Process(object):
         if inputdata is not None:
             kw["stdin"] = subprocess.PIPE
         if suppress_output:
-            kw["stdout"] = open(os.devnull, "w")
+            kw["stdout"] = subprocess.DEVNULL
             kw["stderr"] = kw["stdout"]
         try:
-            try:
-                process = subprocess.Popen(self.cmd, **kw)
-            finally:
-                if suppress_output:
-                    kw["stdout"].close()
+            process = subprocess.Popen(self.cmd, **kw)
         except OSError as e:
             raise SubprocessError(self.cmd, e.errno, e.strerror)
 
