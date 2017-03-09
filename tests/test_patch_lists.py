@@ -7,8 +7,8 @@ from unittest import TestCase
 
 from helpers import StringIO, tmp_mapping
 
-from quilt.cli.next import NextCommand
-from quilt.cli.previous import PreviousCommand
+from quilt.cli.next import next
+from quilt.cli.previous import previous
 
 class Test(TestCase):
 
@@ -17,7 +17,7 @@ class Test(TestCase):
                 tmp_mapping(vars(sys)) as tmp_sys:
             tmp_sys.set("stderr", StringIO())
             with self.assertRaises(SystemExit) as caught:
-                PreviousCommand().run()
+                previous().run()
             self.assertEqual(caught.exception.code, 1)
             self.assertIn("No patches applied", sys.stderr.getvalue())
     
@@ -25,7 +25,7 @@ class Test(TestCase):
         with self._setup_test_data(), \
                 tmp_mapping(vars(sys)) as tmp_sys:
             tmp_sys.set("stdout", StringIO())
-            NextCommand().run()
+            next().run()
             self.assertEqual("p1.patch\n", sys.stdout.getvalue())
     
     @contextmanager

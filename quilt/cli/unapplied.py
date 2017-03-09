@@ -11,9 +11,7 @@ import os
 from quilt.cli.meta import Command
 from quilt.db import Db, Series
 
-class UnappliedCommand(Command):
-
-    name = "unapplied"
+class unapplied(Command):
 
     def run(self):
         db = Db(self.get_pc_dir())

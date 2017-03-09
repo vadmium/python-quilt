@@ -10,9 +10,7 @@ from quilt.add import Add
 from quilt.cli.meta import Command
 from quilt.utils import SubprocessError, Process
 
-class EditCommand(Command):
-
-    name = "edit"
+class edit(Command):
 
     params = dict(
         args=dict(nargs="+", metavar="file"),

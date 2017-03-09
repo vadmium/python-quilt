@@ -9,9 +9,7 @@
 from quilt.cli.meta import Command
 from quilt.error import NoAppliedPatch
 
-class AppliedCommand(Command):
-
-    name = "applied"
+class applied(Command):
 
     def run(self):
         db = self.get_db()

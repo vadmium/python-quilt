@@ -9,9 +9,7 @@
 from quilt.cli.meta import Command
 from quilt.delete import Delete
 
-class DeleteCommand(Command):
-
-    name  = "delete"
+class delete(Command):
 
     params = dict(
         remove=dict(name="-r", help="Remove the deleted patch file from the " \

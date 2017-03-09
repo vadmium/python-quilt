@@ -9,9 +9,7 @@
 from quilt.cli.meta import Command
 from quilt.db import Db
 
-class TopCommand(Command):
-
-    name = "top"
+class top(Command):
 
     def run(self):
         db = Db(self.get_pc_dir())

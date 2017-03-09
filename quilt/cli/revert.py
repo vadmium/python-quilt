@@ -11,9 +11,7 @@ import os
 from quilt.revert import Revert
 from quilt.cli.meta import Command
 
-class RevertCommand(Command):
-
-    name = "revert"
+class revert(Command):
 
     params = dict(
         args=dict(metavar="file", nargs="+"),

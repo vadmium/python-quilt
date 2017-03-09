@@ -10,9 +10,7 @@ from quilt.cli.meta import Command
 from quilt.error import PatchAlreadyExists
 from quilt.new import New
 
-class NewCommand(Command):
-
-    name = "new"
+class new(Command):
 
     def run(self, patchname):
         new = New(self.get_cwd(), self.get_pc_dir(), self.get_patches_dir())

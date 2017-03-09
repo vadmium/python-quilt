@@ -10,9 +10,7 @@ from quilt.cli.meta import Command
 from quilt.db import Db, Series
 from quilt.patch import Patch
 
-class NextCommand(Command):
-
-    name = "next"
+class next(Command):
 
     def run(self, patchname=None):
         series = Series(self.get_patches_dir())

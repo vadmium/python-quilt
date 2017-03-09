@@ -11,9 +11,7 @@ import os
 from quilt.add import Add
 from quilt.cli.meta import Command
 
-class AddCommand(Command):
-
-    name = "add"
+class add(Command):
 
     params = dict(
         args=dict(metavar="file", nargs="+"),

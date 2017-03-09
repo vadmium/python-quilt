@@ -9,9 +9,7 @@
 from quilt.cli.meta import Command
 from quilt.db import Series
 
-class SeriesCommand(Command):
-
-    name = "series"
+class series(Command):
 
     def run(self):
         series = Series(self.get_patches_dir())

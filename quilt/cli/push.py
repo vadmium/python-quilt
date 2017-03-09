@@ -9,9 +9,7 @@
 from quilt.cli.meta import Command
 from quilt.push import Push
 
-class PushCommand(Command):
-
-    name = "push"
+class push(Command):
 
     params = dict(
         all=dict(short="-a", help="apply all patches in series"),

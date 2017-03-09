@@ -32,7 +32,9 @@ class CommandMetaClass(type):
 
     def __new__(meta, name, bases, dict):
         cls = type.__new__(meta, name, bases, dict)
-        if cls.name is not None:
+        if any(isinstance(b, CommandMetaClass) for b in bases):
+            if not hasattr(cls, "name"):
+                cls.name = name
             register_command(cls.name, cls)
         return cls
 
@@ -41,6 +43,9 @@ class CommandMetaClass(type):
 class Command(object):
 
     """ Base class for CLI commands
+    
+    The name of each subclass determines the command name, but this can be
+    overridden with the "name" class attribute.
     
     Each subclass defines a "run" method, whose signature determines the
     command-line parameters. Each parameter triggers a call to "Argument-
@@ -86,7 +91,6 @@ class Command(object):
     
     patches_dir = "patches"
     pc_dir = ".pc"
-    name = None
     params = dict()
 
     def parse(self, args):

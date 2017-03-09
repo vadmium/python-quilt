@@ -12,9 +12,7 @@ from quilt.cli.meta import Command
 from quilt.refresh import Refresh
 from quilt.utils import SubprocessError, Process
 
-class RefreshCommand(Command):
-
-    name = "refresh"
+class refresh(Command):
 
     def run(self, patch=None, edit=False):
         refresh = Refresh(os.getcwd(), self.get_pc_dir(),

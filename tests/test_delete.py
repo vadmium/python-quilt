@@ -8,7 +8,7 @@ import sys
 from helpers import QuiltTest, tmp_mapping
 
 from quilt.delete import Delete
-from quilt.cli.delete import DeleteCommand
+from quilt.cli.delete import delete
 
 class Test(QuiltTest):
 
@@ -37,6 +37,6 @@ class Test(QuiltTest):
                 env.set("QUILT_PATCHES", patches.dirname)
                 env.set("QUILT_PC", dir.get_name())
                 tmp_sys.set("stdout", cStringIO())
-                DeleteCommand().run(next=True, remove=True, backup=False)
+                delete().run(next=True, remove=True, backup=False)
             self.assertFalse(os.path.exists(patch))
             self.assertFalse(os.path.exists(patch + "~"))
