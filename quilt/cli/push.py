@@ -32,6 +32,7 @@ class PushCommand(Command):
         if args.all:
             push.apply_all(args.force)
         elif args.patch:
+            # if patch doesn't have "patches/" prefix, add it; don't add it internally
             push.apply_patch(args.patch, args.force)
         else:
             push.apply_next_patch(args.force)
