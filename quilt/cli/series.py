@@ -15,7 +15,7 @@ class SeriesCommand(Command):
 
     name = "series"
 
-    def run(self, v=False):
+    def run(self, *, v=False):
         series = Series(self.get_patches_dir())
         if v:
             db = Db(self.get_pc_dir())

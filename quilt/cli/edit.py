@@ -14,10 +14,7 @@ class EditCommand(Command):
 
     name = "edit"
 
-    params = dict(
-        args=dict(nargs="+", metavar="file"),
-    )
-    def run(self, *args):
+    def run(self, *args: dict(nargs="+", metavar="file")):
         add = Add(self.get_cwd(), self.get_pc_dir(), self.get_patches_dir())
         add.add_files(args, ignore=True)
 

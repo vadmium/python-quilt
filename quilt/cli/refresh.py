@@ -16,7 +16,9 @@ class RefreshCommand(Command):
 
     name = "refresh"
 
-    def run(self, patch=None, edit=False):
+    def run(self, patch=None, *,
+            edit: dict(short="-e", help="open patch in editor before " \
+                "refreshing") = False):
         refresh = Refresh(os.getcwd(), self.get_pc_dir(),
                           self.get_patches_dir())
 
@@ -26,10 +28,6 @@ class RefreshCommand(Command):
             refresh.edit_patch.connect(self.edit_patch)
 
         refresh.refresh(patch, edit)
-    params = dict(
-        edit=dict(short="-e", help="open patch in editor before " \
-                          "refreshing"),
-    )
 
     def edit_patch(self, tmpfile):
         editor = os.environ.get("EDITOR", "vi")

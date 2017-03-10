@@ -15,11 +15,9 @@ class AddCommand(Command):
 
     name = "add"
 
-    params = dict(
-        args=dict(metavar="file", nargs="+"),
-        patch=dict(name="-p", help="patch to add files to"),
-    )
-    def run(self, args, patch=None):
+    def run(self,
+            *args: dict(metavar="file", nargs="+"),
+            patch: dict(name="-p", help="patch to add files to") = None):
         add = Add(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
         add.file_added.connect(self.file_added)
         add.add_files(args, patch)

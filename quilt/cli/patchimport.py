@@ -14,14 +14,12 @@ from quilt.patchimport import Import
 class PatchImportCommand(Command):
     name = "import"
 
-    params = dict(
-        args=dict(metavar="patchfile", nargs="+"),
-        patchname=dict(name="-P", metavar="NAME",
-            help="Import patch as NAME. " \
-                          "This option can only be used when importing a " \
-                          "single patch."),
-    )
-    def run(self, args, patchname=None):
+    def run(self,
+            *args: dict(metavar="patchfile", nargs="+"),
+            patchname: dict(name="-P", metavar="NAME",
+                help="Import patch as NAME. " \
+                    "This option can only be used when importing a " \
+                    "single patch.") = None):
         importp = Import(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
 
         if patchname is not None:

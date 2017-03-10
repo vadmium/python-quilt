@@ -15,20 +15,21 @@ class DeleteCommand(Command):
 
     name  = "delete"
 
-    params = dict(
-        remove=dict(name="-r", help="Remove the deleted patch file from the " \
-                                     "patches directory as well."),
-        patch=dict(mutex_group="patch"),
-        next=dict(name="-n", mutex_group="patch",
-                          help="Delete the next patch after topmost, " \
-                                      "rather than the specified or topmost " \
-                                      "patch. Cannot be combined with the " \
-                                      '"patch" parameter.'),
-        backup=dict(name="--backup", help="Rename the patch file to patch~ " \
-                                      "rather than deleting it. Ignored if " \
-                                      "not used with `-r'."),
-    )
-    def run(self, patch=None, remove=False, next=False, backup=False):
+    def run(self,
+            patch: dict(mutex_group="patch") = None,
+            *,
+            remove: dict(name="-r",
+                help="Remove the deleted patch file from the " \
+                    "patches directory as well.") = False,
+            next: dict(name="-n", mutex_group="patch",
+                help="Delete the next patch after topmost, " \
+                    "rather than the specified or topmost " \
+                    "patch. Cannot be combined with the " \
+                    '"patch" parameter.') = False,
+            backup: dict(name="--backup",
+                help="Rename the patch file to patch~ " \
+                    "rather than deleting it. Ignored if " \
+                    "not used with `-r'.") = False):
         delete = Delete(self.get_cwd(), self.get_pc_dir(),
                         self.get_patches_dir())
         delete.deleted_patch.connect(self.deleted_patch)

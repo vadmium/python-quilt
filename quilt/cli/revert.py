@@ -17,11 +17,10 @@ class RevertCommand(Command):
 
     name = "revert"
 
-    params = dict(
-        args=dict(metavar="file", nargs="+"),
-        patch=dict(name="-p", help="revert changes in the named patch"),
-    )
-    def run(self, args, patch=None):
+    def run(self,
+            *args: dict(metavar="file", nargs="+"),
+            patch: dict(name="-p",
+                help="revert changes in the named patch") = None):
         revert = Revert(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
         revert.file_reverted.connect(self.file_reverted)
         revert.file_unchanged.connect(self.file_unchanged)

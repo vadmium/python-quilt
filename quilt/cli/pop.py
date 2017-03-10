@@ -15,10 +15,9 @@ class PopCommand(Command):
 
     name = "pop"
 
-    params = dict(
-        all=dict(short="-a", help="remove all applied patches"),
-    )
-    def run(self, patch=None, all=False):
+    def run(self, patch=None, *,
+            all: dict(short="-a", help="remove all applied patches")
+                = False):
         pop = Pop(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
         pop.unapplying.connect(self.unapplying)
         pop.unapplied.connect(self.unapplied)

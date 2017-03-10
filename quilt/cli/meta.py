@@ -40,43 +40,38 @@ class Command(metaclass=CommandMetaClass):
     
     Each subclass defines a "run" method, whose signature determines the
     command-line parameters. Each parameter triggers a call to "Argument-
-    Parser.add_argument". Some settings for each parameter are inferred from
+    Parser.add_argument". Settings for each parameter are inferred from
     the signature.
     
-    The parameter name is passed to "add_argument":
+    For positional parameters, the name is passed to "add_argument":
         param => add_argument("param")
     
-    A default of False implies a flag:
+    For keyword-only parameters, the name is converted to a CLI option:
+        param => add_argument("--param", required=True)
+        x => add_argument("-x", required=True)
+    
+    A keyword-only parameter with a default of False implies a flag:
         param=False => add_argument("--param", action="store_true")
     
-    A single-letter option name implies one dash rather than two:
-        x=False => add_argument("-x", action="store_true")
-    
-    Other default values are passed to "add_argument" and imply an optional
-    positional parameter (unless it is a CLI option):
-        param=default => add_argument("param", nargs="?", default=default)
+    Other default values are passed to "add_argument" and either imply an
+    optional positional parameter or cancel the "required" status of a CLI
+    option:
+        param=default =>
+            add_argument("param", nargs="?", default=default) or
+            add_argument("--param", default=default)
     
     A "starred" parameter receives multiple values:
         *param => add_argument("param", nargs="*")
     
     The "add_argument" settings are overridden and further specified by
-    setting up a "params" attribute of the Command subclass. This attribute
-    is a mapping from parameter names to their settings. Each "params" value
-    is a mapping holding the "add_argument" settings. The following settings
-    are special:
+    parameter annotations. Each annotation is a mapping holding the "add_
+    argument" settings. The following settings are special:
     
     * name: The primary parameter name passed to "add_argument":
-        name="alias" => add_argument("alias", dest="param")
-        
-        If the name starts with one or two dashes, the parameter is a CLI
-        option rather than a positional parameter. Whether it is optional or
-        mandatory depends if a default value is given:
-            name="--param" =>
-                add_argument("--param", default=. . .) or
-                add_argument("--param", required=True)
+        param: dict(name="alias") => add_argument("alias", dest="param")
     
     * short: Implies a CLI option with a single-letter alias:
-        short="-x" => add_argument("-x", "--param")
+        param: dict(short="-x") => add_argument("-x", "--param")
     
     * mutex_group: Parameters that share the same mutex_group value are added
         to a common group created with "ArgumentParser.add_mutually_
@@ -86,47 +81,20 @@ class Command(metaclass=CommandMetaClass):
     patches_dir = "patches"
     pc_dir = ".pc"
     name = None
-    params = dict()
 
     def parse(self, args):
         prog = "pquilt " + self.name
         parser = ArgumentParser(prog=prog, description=inspect.getdoc(self))
         
-        details = dict(self.params)
-        params = inspect.getfullargspec(self.run)
-        if params.defaults is None:
-            defaults = ()
-        else:
-            defaults = params.defaults
+        pos = None
+        pos_kinds = {inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD}
         groups = dict()
-        # Ignore the first parameter (self)
-        for [i, dest] in enumerate(params.args[1:], 1 - len(params.args)):
-            has_default = i >= -len(defaults)
-            if has_default:
-                default = defaults[i]
+        for param in inspect.signature(self.run).parameters.values():
+            if param.annotation is inspect.Parameter.empty:
+                settings = dict()
             else:
-                default = None
-            settings = dict(details.pop(dest, ()))
-            try:
-                short = (settings.pop("short"),)
-            except LookupError:
-                short = ()
-            if default is False or short:
-                if len(dest) == 1:
-                    name = "-" + dest
-                else:
-                    name = "--" + dest
-            else:
-                name = dest
-            if default is False:
-                settings.setdefault("action", "store_true")
-            name = settings.pop("name", name)
-            if name.startswith("-"):
-                settings["dest"] = dest
-                if not has_default:
-                    settings.setdefault("required", True)
-            elif has_default:
-                settings.setdefault("nargs", "?")
+                settings = dict(param.annotation)
             try:
                 g = settings.pop("mutex_group")
             except LookupError:
@@ -137,16 +105,38 @@ class Command(metaclass=CommandMetaClass):
                 except LookupError:
                     group = parser.add_mutually_exclusive_group()
                     groups[g] = group
-            group.add_argument(*short, name, default=default, **settings)
-        
-        if params.varargs is not None:
-            settings = dict(details.pop(params.varargs, ()))
-            settings.setdefault("nargs", "*")
-            parser.add_argument(params.varargs, **settings)
-        assert not details
+            if param.kind in pos_kinds:
+                if param.default is not inspect.Parameter.empty:
+                    settings.setdefault("nargs", "?")
+                group.add_argument(param.name, default=param.default,
+                    **settings)
+                continue
+            if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                settings.setdefault("nargs", "*")
+                pos = param.name
+                group.add_argument(pos, **settings)
+                continue
+            if param.kind == inspect.Parameter.KEYWORD_ONLY:
+                try:
+                    short = (settings.pop("short"),)
+                except LookupError:
+                    short = ()
+                if len(param.name) == 1:
+                    name = "-" + param.name
+                else:
+                    name = "--" + param.name
+                name = settings.pop("name", name)
+                if param.default is False:
+                    settings.setdefault("action", "store_true")
+                elif param.default is inspect.Parameter.empty:
+                    settings.setdefault("required", True)
+                group.add_argument(*short, name,
+                    dest=param.name, default=param.default, **settings)
+                continue
+            assert False
         
         kw = vars(parser.parse_args(args))
-        pos = kw.pop(params.varargs, ())
+        pos = kw.pop(pos, ())
         self.run(*pos, **kw)
 
     def get_patches_dir(self):

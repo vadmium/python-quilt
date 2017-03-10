@@ -13,12 +13,11 @@ class PushCommand(Command):
 
     name = "push"
 
-    params = dict(
-        all=dict(short="-a", help="apply all patches in series"),
-        force=dict(short="-f", help="Force apply, even if the " \
-                                                "patch has rejects."),
-    )
-    def run(self, patch=None, all=False, force=False):
+    def run(self, patch=None, *,
+            all: dict(short="-a", help="apply all patches in series")
+                = False,
+            force: dict(short="-f", help="Force apply, even if the " \
+                    "patch has rejects.") = False):
         push = Push(self.get_cwd(), self.get_pc_dir(), self.get_patches_dir())
         push.applying_patch.connect(self.applying_patch)
         push.applied.connect(self.applied)
