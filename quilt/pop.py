@@ -6,7 +6,6 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-from errno import ENOENT
 import os.path, os
 
 from quilt.command import Command
@@ -46,14 +45,12 @@ class Pop(Command):
 
     def _check_timestamps(self, pc, patch):
         try:
-            timestamp = os.stat(os.path.join(pc, ".timestamp")).st_mtime
+            timestamp = os.stat(os.path.join(pc, ".timestamp")).st_mtime_ns
             if self._patches is not None:
                 patch = os.stat(os.path.join(self._patches, patch))
-                if patch.st_mtime >= timestamp:
+                if patch.st_mtime_ns >= timestamp:
                     raise _TimestampModified("Patch file modified")
-        except OSError as err:
-            if err.errno != ENOENT:
-                raise
+        except FileNotFoundError:
             raise _TimestampModified("Patch or original timestamp missing")
         for [dirpath, dirnames, filenames] in os.walk(pc):
             for file in filenames:
@@ -62,14 +59,12 @@ class Pop(Command):
                 file = os.path.join(os.path.relpath(dirpath, pc), file)
                 try:
                     file_stat = os.stat(os.path.join(self.cwd, file))
-                except OSError as err:
-                    if err.errno != ENOENT:
-                        raise
+                except FileNotFoundError:
                     raise _TimestampModified("File {} missing".format(file))
-                if file_stat.st_mtime >= timestamp:
+                if file_stat.st_mtime_ns >= timestamp:
                     raise _TimestampModified("File {} modified".format(file))
     
-    def _unapply_patch(self, patch, force):
+    def _unapply_patch(self, patch, *, force):
         self.unapplying(patch)
 
         patch_name = patch.get_name()

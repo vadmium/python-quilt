@@ -12,7 +12,6 @@ import os
 import sys
 
 from quilt.db import Db, Series
-from quilt.utils import _getargspec
 
 command_map = dict()
 
@@ -91,7 +90,7 @@ class Command(metaclass=CommandMetaClass):
         parser = ArgumentParser(prog=prog, description=inspect.getdoc(self))
         
         details = dict(self.params)
-        params = _getargspec(self.run)
+        params = inspect.getfullargspec(self.run)
         if params.defaults is None:
             defaults = ()
         else:
@@ -132,7 +131,7 @@ class Command(metaclass=CommandMetaClass):
                 except LookupError:
                     group = parser.add_mutually_exclusive_group()
                     groups[g] = group
-            group.add_argument(*short + (name,), default=default, **settings)
+            group.add_argument(*short, name, default=default, **settings)
         
         if params.varargs is not None:
             settings = dict(details.pop(params.varargs, ()))
