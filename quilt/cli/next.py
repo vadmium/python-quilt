@@ -12,10 +12,9 @@ from quilt.patch import Patch
 
 class NextCommand(Command):
 
-    usage = "%prog next [patchname]"
     name = "next"
 
-    def run(self, options, args):
+    def run(self, patchname=None):
         series = Series(self.get_patches_dir())
         if not series.exists():
             self.exit_error("No series file found.")
@@ -23,9 +22,8 @@ class NextCommand(Command):
         db = Db(self.get_pc_dir())
 
         top = None
-        if len(args) == 1:
-            patch_name = args[0]
-            top = Patch(patch_name)
+        if patchname is not None:
+            top = Patch(patchname)
         else:
             if db.exists():
                 top = db.top_patch()

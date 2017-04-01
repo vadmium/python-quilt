@@ -13,21 +13,21 @@ from quilt.patchimport import Import
 
 class PatchImportCommand(Command):
     name = "import"
-    usage = "%prog import [-P patch] patchfile [...]"
-    min_args = 1
 
-    def add_args(self, parser):
-        parser.add_option("-P", metavar="NAME", help="Import patch as NAME. " \
+    params = dict(
+        args=dict(metavar="patchfile", nargs="+"),
+        patchname=dict(name="-P", metavar="NAME",
+            help="Import patch as NAME. " \
                           "This option can only be used when importing a " \
-                          "single patch.", dest="patchname")
-
-    def run(self, options, args):
+                          "single patch."),
+    )
+    def run(self, args, patchname=None):
         importp = Import(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
 
-        if options.patchname:
+        if patchname is not None:
             if len(args) > 1:
                 self.exit_error("It's only possible to rename a patch if one "
                                 "patch will be imported.")
-            importp.import_patch(args[0], options.patchname)
+            importp.import_patch(args[0], patchname)
         else:
             importp.import_patches(args)

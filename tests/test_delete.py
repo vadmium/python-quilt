@@ -34,11 +34,10 @@ class Test(QuiltTest):
             patch = os.path.join(dir, "patch")
             with open(patch, "wb"):
                 pass
-            options = SimpleNamespace(next=True, remove=True, backup=False)
             with mock.patch.dict("os.environ", (
                 ("QUILT_PATCHES", patches.dirname),
                 ("QUILT_PC", dir),
             )), redirect_stdout(StringIO()):
-                DeleteCommand().run(options, [])
+                DeleteCommand().run(next=True, remove=True, backup=False)
             self.assertFalse(os.path.exists(patch))
             self.assertFalse(os.path.exists(patch + "~"))

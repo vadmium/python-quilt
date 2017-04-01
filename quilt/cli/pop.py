@@ -13,25 +13,23 @@ from quilt.pop import Pop
 
 class PopCommand(Command):
 
-    usage = "%prog pop [-a] [patch]"
     name = "pop"
 
-    def add_args(self, parser):
-        parser.add_option("-a", "--all", help="remove all applied patches",
-                        action="store_true")
-
-    def run(self, options, args):
-        pop = Pop(os.getcwd(), self.get_pc_dir())
+    params = dict(
+        all=dict(short="-a", help="remove all applied patches"),
+    )
+    def run(self, patch=None, all=False):
+        pop = Pop(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
         pop.unapplying.connect(self.unapplying)
         pop.unapplied.connect(self.unapplied)
         pop.empty_patch.connect(self.empty_patch)
 
-        if options.all:
+        if all:
             pop.unapply_all()
-        elif not args:
+        elif patch is None:
             pop.unapply_top_patch()
         else:
-            pop.unapply_patch(args[0])
+            pop.unapply_patch(patch)
 
     def unapplying(self, patch):
         print("Removing patch %s" % patch.get_name())

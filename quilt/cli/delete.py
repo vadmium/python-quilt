@@ -10,41 +10,34 @@ from quilt.cli.meta import Command
 from quilt.delete import Delete
 
 class DeleteCommand(Command):
+    """ Remove a patch from the series
+    """
 
-    usage = "%prog delete [-r] [--backup] [patch|-n]"
     name  = "delete"
 
-    def add_args(self, parser):
-        parser.add_option("-r", help="Remove the deleted patch file from the " \
-                                     "patches directory as well.",
-                          action="store_true", dest="remove", default=False)
-        parser.add_option("-n", help="Delete the next patch after topmost, " \
+    params = dict(
+        remove=dict(name="-r", help="Remove the deleted patch file from the " \
+                                     "patches directory as well."),
+        patch=dict(mutex_group="patch"),
+        next=dict(name="-n", mutex_group="patch",
+                          help="Delete the next patch after topmost, " \
                                       "rather than the specified or topmost " \
-                                      "patch.",
-                          action="store_true", dest="next")
-        parser.add_option("--backup", help="Rename the patch file to patch~ " \
+                                      "patch. Cannot be combined with the " \
+                                      '"patch" parameter.'),
+        backup=dict(name="--backup", help="Rename the patch file to patch~ " \
                                       "rather than deleting it. Ignored if " \
-                                      "not used with `-r'.",
-                          action="store_true", default=False, dest="backup")
-
-    def run(self, options, args):
+                                      "not used with `-r'."),
+    )
+    def run(self, patch=None, remove=False, next=False, backup=False):
         delete = Delete(self.get_cwd(), self.get_pc_dir(),
                         self.get_patches_dir())
         delete.deleted_patch.connect(self.deleted_patch)
         delete.deleting_patch.connect(self.deleting_patch)
 
-        if options.next and len(args) > 0:
-            parser.print_usage()
-            sys.exit(1)
-
-        if options.next:
-            delete.delete_next(options.remove, options.backup)
+        if next:
+            delete.delete_next(remove, backup)
         else:
-            patch = None
-            if len(args) > 0:
-                patch = args[0]
-
-            delete.delete_patch(patch, options.remove, options.backup)
+            delete.delete_patch(patch, remove, backup)
 
     def deleted_patch(self, patch):
         print("Removed patch %s" % patch.get_name())

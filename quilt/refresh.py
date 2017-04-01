@@ -77,15 +77,15 @@ class Refresh(Command):
                 tpatch = Patch(tmpfile.get_name())
                 tpatch.run(pc_dir.get_name(), dry_run=True, quiet=True)
 
+            timestamp = pc_dir + File(".timestamp")
+            timestamp.touch()
+            
             if patch_file.exists():
                 diff = Diff(patch_file, tmpfile)
                 if diff.equal(self.cwd):
                     raise QuiltError("Nothing to refresh.")
 
             tmpfile.copy(patch_file)
-
-        timestamp = pc_dir + File(".timestamp")
-        timestamp.touch()
 
         refresh = self.quilt_pc + File(patch.get_name() + "~refresh")
         refresh.delete_if_exists()

@@ -12,20 +12,20 @@ from quilt.revert import Revert
 from quilt.cli.meta import Command
 
 class RevertCommand(Command):
+    """ Drop unrefreshed changes
+    """
 
-    usage = "%prog revert [-p patch] file1 [...]"
     name = "revert"
-    min_args = 1
 
-    def add_args(self, parser):
-        parser.add_option("-p", help="revert changes in the named patch",
-                          metavar="PATCH", dest="patch")
-
-    def run(self, options, args):
+    params = dict(
+        args=dict(metavar="file", nargs="+"),
+        patch=dict(name="-p", help="revert changes in the named patch"),
+    )
+    def run(self, args, patch=None):
         revert = Revert(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
         revert.file_reverted.connect(self.file_reverted)
         revert.file_unchanged.connect(self.file_unchanged)
-        revert.revert_files(args, options.patch)
+        revert.revert_files(args, patch)
 
     def file_reverted(self, file, patch):
         print("Changes to %s in patch %s reverted" % (file.get_name(),

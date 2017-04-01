@@ -13,10 +13,9 @@ from quilt.db import Db, Series
 
 class UnappliedCommand(Command):
 
-    usage = "%prog unapplied"
     name = "unapplied"
 
-    def run(self, options, args):
+    def run(self):
         db = Db(self.get_pc_dir())
         top = db.top_patch()
         series = Series(self.get_patches_dir())

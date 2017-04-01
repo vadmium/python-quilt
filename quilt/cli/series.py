@@ -10,11 +10,12 @@ from quilt.cli.meta import Command
 from quilt.db import Series
 
 class SeriesCommand(Command):
+    """ List all applied and unapplied patches
+    """
 
-    usage = "%prog series"
     name = "series"
 
-    def run(self, option, args):
+    def run(self):
         series = Series(self.get_patches_dir())
         for patch in series.patches():
             print(patch)
