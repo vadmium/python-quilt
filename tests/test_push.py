@@ -31,7 +31,7 @@ test_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(test_dir, os.pardir))
 
 from quilt.db import Series
-from quilt.error import QuiltError
+from quilt.error import QuiltError, AllPatchesApplied
 from quilt.patch import Patch
 from quilt.push import Push
 from quilt.utils import Directory, TmpDirectory, File
@@ -101,6 +101,14 @@ class PushTest(QuiltTest):
 
             self.assertTrue(f1.exists())
             self.assertTrue(f2.exists())
+    
+    def test_upto_applied(self):
+        """ Push up to a specified patch when a patch is already applied """
+        top = os.path.join(test_dir, "data", "pop", "test1")
+        pc = os.path.join(top, "pc")
+        patches = os.path.join(top, "patches")
+        cmd = Push(top, quilt_pc=pc, quilt_patches=patches)
+        self.assertRaises(AllPatchesApplied, cmd.apply_patch, "p1.patch")
     
     def test_force(self):
         with self._tmp_series() as [dir, series]:
