@@ -28,7 +28,7 @@ from helpers import QuiltTest, StringIO, tmp_mapping
 test_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(test_dir, os.pardir))
 
-from quilt.db import PatchSeries, Series
+from quilt.db import Db, DBError, DB_VERSION, PatchSeries, Series
 from quilt.db import Patch
 from quilt.utils import TmpDirectory
 
@@ -37,6 +37,15 @@ def patch_list(patch_names):
 
 class DbTest(QuiltTest):
 
+    def test_version(self):
+        version = "234\n"
+        self.assertTrue(version.startswith(format(DB_VERSION)))
+        with TmpDirectory() as dir:
+            file = os.path.join(dir.get_name(), ".version")
+            with open(file, "wb") as file:
+                file.write(version.encode("ascii"))
+            self.assertRaises(DBError, Db, dir.get_name())
+    
     def test_series(self):
         firstpatch = Patch("firstpatch")
         lastpatch = Patch("lastpatch")
@@ -57,12 +66,12 @@ class DbTest(QuiltTest):
         self.assertEqual([], db.patches_before(firstpatch))
         self.assertEqual(patch_list(["firstpatch", "secondpatch"]),
                          db.patches_before(thirdpatch))
-        self.assertEquals(patch_list(["patchwith.patch", "patchwith.diff",
+        self.assertEqual(patch_list(["patchwith.patch", "patchwith.diff",
                            "patchwith", "lastpatch"]),
                           db.patches_after(thirdpatch))
-        self.assertEquals([], db.patches_after(lastpatch))
-        self.assertEquals(None, db.patch_after(lastpatch))
-        self.assertEquals(thirdpatch, db.patch_after(secondpatch))
+        self.assertEqual([], db.patches_after(lastpatch))
+        self.assertEqual(None, db.patch_after(lastpatch))
+        self.assertEqual(thirdpatch, db.patch_after(secondpatch))
         self.assertEqual(patch_list(["firstpatch", "secondpatch",
                          "thirdpatch"]),
                          db.patches_until(thirdpatch))
@@ -169,7 +178,7 @@ class DbTest(QuiltTest):
 
         self.assertTrue(db.exists())
         self.assertFalse(db.is_empty())
-        self.assertEquals(len(db.patches()), 3)
+        self.assertEqual(len(db.patches()), 3)
 
         patch1 = Patch("patch1")
         patch2 = Patch("patch2")
@@ -187,7 +196,7 @@ class DbTest(QuiltTest):
         self.assertTrue(db.is_patch(patch5))
 
         patchline = db.patch2line[patch5]
-        self.assertEquals(patchline.get_comment(), " my comment")
+        self.assertEqual(patchline.get_comment(), " my comment")
 
 
 if __name__ == "__main__":

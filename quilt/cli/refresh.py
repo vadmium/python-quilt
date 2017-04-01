@@ -2,22 +2,9 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@gmail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+# See LICENSE comming with the source of python-quilt for details.
 
 import os
 
@@ -27,28 +14,22 @@ from quilt.utils import SubprocessError, Process
 
 class RefreshCommand(Command):
 
-    usage = "%prog refresh [patch]"
     name = "refresh"
 
-    def run(self, options, args):
+    def run(self, patch=None, edit=False):
         refresh = Refresh(os.getcwd(), self.get_pc_dir(),
                           self.get_patches_dir())
 
         refresh.refreshed.connect(self.refreshed)
 
-        if options.edit:
+        if edit:
             refresh.edit_patch.connect(self.edit_patch)
 
-        patch_name = None
-        if len(args) > 0:
-            patch_name = args[0]
-
-        refresh.refresh(patch_name, options.edit)
-
-    def add_args(self, parser):
-        parser.add_option("-e", "--edit", help="open patch in editor before " \
-                          "refreshing", dest="edit", action="store_true",
-                          default=False)
+        refresh.refresh(patch, edit)
+    params = dict(
+        edit=dict(short="-e", help="open patch in editor before " \
+                          "refreshing"),
+    )
 
     def edit_patch(self, tmpfile):
         editor = os.environ.get("EDITOR", "vi")
@@ -56,8 +37,8 @@ class RefreshCommand(Command):
             cmd = [editor]
             cmd.append(tmpfile.get_name())
             Process(cmd).run(cwd=os.getcwd())
-        except SubprocessError, e:
+        except SubprocessError as e:
             self.exit_error(e, value=e.returncode)
 
     def refreshed(self, patch):
-        print "Patch %s refreshed" % patch.get_name()
+        print("Patch %s refreshed" % patch.get_name())

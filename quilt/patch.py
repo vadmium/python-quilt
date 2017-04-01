@@ -2,22 +2,9 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+# See LICENSE comming with the source of python-quilt for details.
 
 import os
 import os.path
@@ -88,6 +75,7 @@ class Patch(object):
 
     @DirectoryParam(["patch_dir"])
     def get_header(self, patch_dir=None):
+        """ Returns bytes """
         lines = []
 
         if patch_dir:
@@ -95,13 +83,13 @@ class Patch(object):
             name = file.get_name()
         else:
             name = self.get_name()
-        with open(name, "r") as f:
+        with open(name, "rb") as f:
             for line in f:
-                if line.startswith("---") or line.startswith("Index:"):
+                if line.startswith(b"---") or line.startswith(b"Index:"):
                     break
                 lines.append(line)
 
-        return "".join(lines)
+        return b"".join(lines)
 
     def __eq__(self, other):
         return (isinstance(other, Patch) and self.get_name() == \
@@ -186,7 +174,7 @@ class Diff(object):
 
         try:
             Process(cmd).run(cwd=cwd, stdout=fd)
-        except SubprocessError, e:
+        except SubprocessError as e:
             if e.get_returncode() > 1:
                 raise e
 
@@ -200,7 +188,7 @@ class Diff(object):
 
         try:
             Process(cmd).run(cwd=cwd, suppress_output=True)
-        except SubprocessError, e:
+        except SubprocessError as e:
             if e.get_returncode() == 1:
                 return False
             else:

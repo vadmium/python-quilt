@@ -3,22 +3,11 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
+# See LICENSE comming with the source of python-quilt for details.
 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
-# 02110-1301 USA
+from __future__ import print_function
 
 import sys
 import os.path
@@ -27,11 +16,12 @@ from quilt.cli import find_command, list_commands
 
 from quilt.error import QuiltError
 
-def usage():
-    print "%s command [--help] ..." % (os.path.basename(sys.argv[0]))
-    print "Available commands:"
+def usage(file=None):
+    cmd = os.path.basename(sys.argv[0])
+    print("%s command [--help] ..." % cmd, file=file)
+    print("Available commands:", file=file)
     for cmd in list_commands():
-        print "\t", cmd[0]
+        print("\t" + cmd[0], file=file)
 
 def main():
     if not len(sys.argv) > 1:
@@ -44,12 +34,12 @@ def main():
     try:
         cmd_cls = find_command(cmd)
         if not cmd_cls:
-            print "command %s not known." % cmd
-            usage()
+            print("command %s not known." % cmd, file=sys.stderr)
+            usage(file=sys.stderr)
             sys.exit(2)
         cmd_cls().parse(args)
-    except QuiltError, e:
-        print e
+    except QuiltError as e:
+        print(e)
         sys.exit(1)
 
 if __name__ == "__main__":

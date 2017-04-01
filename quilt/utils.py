@@ -2,22 +2,9 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
-# 02110-1301 USA
+# See LICENSE comming with the source of python-quilt for details.
 
 """ Utility classes used by serveral quilt modules """
 
@@ -26,10 +13,25 @@ import inspect
 import os
 import os.path
 import shutil
+import six
 import subprocess
 import tempfile
 
 from quilt.error import QuiltError
+
+try:  # Python 3: getargspec() is deprecated
+    _getargspec = inspect.getfullargspec
+except AttributeError:  # Python < 3
+    _getargspec = inspect.getargspec
+
+if str is bytes:  # Python < 3
+    def _encode_str(s):
+        return s
+else:  # Python 3
+    from locale import getpreferredencoding
+    _encoding = getpreferredencoding(do_setlocale=False)
+    def _encode_str(s):
+        return s.encode(_encoding)
 
 
 class SubprocessError(QuiltError):
@@ -69,7 +71,7 @@ class Process(object):
             kw["stderr"] = open(os.devnull, "w")
         try:
             process = subprocess.Popen(self.cmd, **kw)
-        except OSError, e:
+        except OSError as e:
             raise SubprocessError(self.cmd, e.errno, e.strerror)
 
         if inputdata is not None:
@@ -171,7 +173,7 @@ class Directory(object):
             return self
         if isinstance(other, Directory):
             return Directory(os.path.join(self.dirname, other.dirname))
-        elif isinstance(other, basestring):
+        elif isinstance(other, six.string_types):
             return Directory(os.path.join(self.dirname, other))
         elif isinstance(other, File):
             return File(os.path.join(self.dirname, other.filename))
@@ -322,7 +324,7 @@ class FunctionWrapper(object):
 
     def _get_varnames(self):
         if inspect.isfunction(self.func):
-            return inspect.getargspec(self.func)[0]
+            return _getargspec(self.func).args
         elif isinstance(self.func, FunctionWrapper):
             return self.func._get_varnames()
 

@@ -21,6 +21,7 @@
 # 02110-1301 USA
 
 import os.path
+import six
 import sys
 
 from helpers import QuiltTest
@@ -28,6 +29,8 @@ from helpers import QuiltTest
 test_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(test_dir, os.pardir))
 
+from quilt.db import Db
+from quilt.error import QuiltError
 from quilt.patch import Patch
 from quilt.pop import Pop
 from quilt.utils import Directory, TmpDirectory, File
@@ -56,9 +59,9 @@ class PopTest(QuiltTest):
 
             pop = Pop(tmp_test_dir.get_name(), pc_dir.get_name())
 
-            self.assertEquals(patch2, pop.db.top_patch())
+            self.assertEqual(patch2, pop.db.top_patch())
             pop.unapply_all()
-            self.assertEquals(None, pop.db.top_patch())
+            self.assertEqual(None, pop.db.top_patch())
 
             self.assertFalse(f1.exists())
             self.assertFalse(f2.exists())
@@ -82,19 +85,32 @@ class PopTest(QuiltTest):
             self.assertTrue(f2.exists())
 
             pop = Pop(tmp_test_dir.get_name(), pc_dir.get_name())
-            self.assertEquals(patch2, pop.db.top_patch())
+            self.assertEqual(patch2, pop.db.top_patch())
 
             pop.unapply_top_patch()
-            self.assertEquals(patch1, pop.db.top_patch())
+            self.assertEqual(patch1, pop.db.top_patch())
 
             self.assertTrue(f1.exists())
             self.assertFalse(f2.exists())
 
             pop.unapply_top_patch()
-            self.assertEquals(None, pop.db.top_patch())
+            self.assertEqual(None, pop.db.top_patch())
 
             self.assertFalse(f1.exists())
             self.assertFalse(f2.exists())
+    
+    def test_unrefreshed(self):
+        with TmpDirectory() as dir:
+            db = Db(dir.get_name())
+            db.add_patch(Patch("unrefreshed.patch"))
+            db.save()
+            file = os.path.join(db.dirname, "unrefreshed.patch~refresh")
+            with open(file, "w"):
+                pass
+            cmd = Pop(dir.get_name(), db.dirname)
+            with six.assertRaisesRegex(self, QuiltError,
+                    r"needs to be refreshed"):
+                cmd.unapply_top_patch()
 
 
 if __name__ == "__main__":

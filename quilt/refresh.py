@@ -2,22 +2,9 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+# See LICENSE comming with the source of python-quilt for details.
 
 import os.path
 
@@ -26,10 +13,10 @@ from quilt.db import Db, Series
 from quilt.error import QuiltError
 from quilt.patch import Patch, Diff
 from quilt.signals import Signal
-from quilt.utils import Directory, File, TmpFile
+from quilt.utils import Directory, File, TmpFile, _encode_str
 
 INDEX_LINE = \
-    "==================================================================="
+    b"==================================================================="
 
 class Refresh(Command):
     """ Command class to refresh (add or remove chunks) a patch
@@ -123,8 +110,8 @@ class Refresh(Command):
         return (old_hdr, new_hdr, index)
 
     def _write_index(self, f, index):
-        f.write("Index: ")
-        f.write(index)
-        f.write("\n")
+        f.write(b"Index: ")
+        f.write(_encode_str(index))
+        f.write(b"\n")
         f.write(INDEX_LINE)
-        f.write("\n")
+        f.write(b"\n")

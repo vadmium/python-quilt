@@ -2,22 +2,11 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
+# See LICENSE comming with the source of python-quilt for details.
 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+import os.path
 
 from quilt.command import Command
 from quilt.db import Db, Series
@@ -47,10 +36,6 @@ class Push(Command):
         patch_file = self.quilt_patches + File(patch_name)
         refresh = File(pc_dir.get_name() + "~refresh")
 
-        if refresh.exists():
-            raise QuiltError("Patch %s needs to be refreshed" % \
-                                  patch_name)
-
         forced = False
         self.applying_patch(patch)
 
@@ -58,16 +43,14 @@ class Push(Command):
             try:
                 patch.run(self.cwd, patch_dir=self.quilt_patches, backup=True,
                         prefix=pc_dir.get_name(), quiet=quiet)
-                refresh.delete_if_exists()
-            except SubprocessError, e:
-                refresh.touch()
-
+            except SubprocessError as e:
                 if not force:
                     patch = RollbackPatch(self.cwd, pc_dir)
                     patch.rollback()
                     patch.delete_backup()
                     raise QuiltError("Patch %s does not apply" % patch_name)
                 else:
+                    refresh.touch()
                     forced = True
 
         self.db.add_patch(patch)
@@ -83,7 +66,7 @@ class Push(Command):
         elif pc_dir.is_empty():
             self.applied_empty_patch(patch, True)
         elif forced:
-            raise QuiltExceptions("Applied patch %s (forced; needs " \
+            raise QuiltError("Applied patch %s (forced; needs " \
                                     "refresh)" % patch.get_name())
         else:
             self.applied_patch(patch)
@@ -91,6 +74,14 @@ class Push(Command):
     def _check(self):
         if not self.series.exists() or not self.series.patches():
             raise NoPatchesInSeries(self.series)
+        
+        top = self.db.top_patch()
+        if top is not None:
+            refresh = top.get_name() + "~refresh"
+            refresh = os.path.join(self.quilt_pc.get_name(), refresh)
+            if os.path.exists(refresh):
+                raise QuiltError("Patch %s needs to be refreshed" % \
+                                      top.get_name())
 
     def apply_patch(self, patch_name, force=False, quiet=False):
         """ Apply all patches up to patch_name """
@@ -101,7 +92,7 @@ class Push(Command):
         applied = self.db.applied_patches()
         for patch in applied:
             if patch in patches:
-                patches.remove(applied)
+                patches.remove(patch)
 
         if not patches:
             raise AllPatchesApplied(self.series, self.db.top_patch())

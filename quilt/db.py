@@ -2,25 +2,15 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
+# See LICENSE comming with the source of python-quilt for details.
 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+from __future__ import print_function
 
 import getopt
 import os.path
+import six
 import sys
 
 from quilt.error import QuiltError, UnknownPatch
@@ -42,7 +32,7 @@ class PatchLine(object):
         self.comment = ""
         self.patch = None
         self.line = ""
-        if isinstance(patch, basestring):
+        if isinstance(patch, six.string_types):
             self._parse_line(patch)
         elif isinstance(patch, Patch):
             self.patch = patch
@@ -88,8 +78,8 @@ class PatchLine(object):
                         strip = a
                     elif o in ["-R", "--reverse"]:
                         reverse = True
-            except getopt.GetoptError, err:
-                print >> sys.stderr, err
+            except getopt.GetoptError as err:
+                print(err, file=sys.stderr)
 
         self.patch = Patch(patch_name, strip, reverse)
 
@@ -320,10 +310,12 @@ class Db(PatchSeries):
     def check_version(self, version_file):
         """ Checks if the .version file in dirname has the correct supported
             version number """
+        # The file contains a version number as a decimal integer, optionally
+        # followed by a newline
         with open(version_file, "r") as f:
-            version = f.read(1)
+            version = f.read(10)
 
-        if not version == str(DB_VERSION):
+        if len(version) >= 10 or version.rstrip("\r\n") != str(DB_VERSION):
             raise DBError("The quilt meta-data version of %r is not supported "
                           "by python-quilt. Python-quilt only supports "
                           "version %r" % (version, DB_VERSION))

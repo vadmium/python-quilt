@@ -2,22 +2,9 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+# See LICENSE comming with the source of python-quilt for details.
 
 import os
 
@@ -26,21 +13,21 @@ from quilt.patchimport import Import
 
 class PatchImportCommand(Command):
     name = "import"
-    usage = "%prog import [-P patch] patchfile [...]"
-    min_args = 1
 
-    def add_args(self, parser):
-        parser.add_option("-P", metavar="NAME", help="Import patch as NAME. " \
+    params = dict(
+        args=dict(metavar="patchfile", nargs="+"),
+        patchname=dict(name="-P", metavar="NAME",
+            help="Import patch as NAME. " \
                           "This option can only be used when importing a " \
-                          "single patch.", dest="patchname")
-
-    def run(self, options, args):
+                          "single patch."),
+    )
+    def run(self, args, patchname=None):
         importp = Import(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
 
-        if options.patchname:
+        if patchname is not None:
             if len(args) > 1:
                 self.exit_error("It's only possible to rename a patch if one "
                                 "patch will be imported.")
-            importp.import_patch(args[0], options.patchname)
+            importp.import_patch(args[0], patchname)
         else:
             importp.import_patches(args)

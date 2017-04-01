@@ -2,22 +2,9 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+# See LICENSE comming with the source of python-quilt for details.
 
 import os
 
@@ -25,23 +12,23 @@ from quilt.revert import Revert
 from quilt.cli.meta import Command
 
 class RevertCommand(Command):
+    """ Drop unrefreshed changes
+    """
 
-    usage = "%prog revert [-p patch] file1 [...]"
     name = "revert"
-    min_args = 1
 
-    def add_args(self, parser):
-        parser.add_option("-p", help="revert changes in the named patch",
-                          metavar="PATCH", dest="patch")
-
-    def run(self, options, args):
+    params = dict(
+        args=dict(metavar="file", nargs="+"),
+        patch=dict(name="-p", help="revert changes in the named patch"),
+    )
+    def run(self, args, patch=None):
         revert = Revert(os.getcwd(), self.get_pc_dir(), self.get_patches_dir())
         revert.file_reverted.connect(self.file_reverted)
         revert.file_unchanged.connect(self.file_unchanged)
-        revert.revert_files(args, options.patch)
+        revert.revert_files(args, patch)
 
     def file_reverted(self, file, patch):
-        print "Changes to %s in patch %s reverted" % (file.get_name(),
-                                                      patch.get_name())
+        print("Changes to %s in patch %s reverted" % (file.get_name(),
+                                                      patch.get_name()))
     def file_unchanged(self, file, patch):
-        print "File %s is unchanged" % file.get_name()
+        print("File %s is unchanged" % file.get_name())

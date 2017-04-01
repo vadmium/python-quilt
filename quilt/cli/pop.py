@@ -2,22 +2,9 @@
 
 # python-quilt - A Python implementation of the quilt patch system
 #
-# Copyright (C) 2012  Björn Ricks <bjoern.ricks@googlemail.com>
+# Copyright (C) 2012 - 2017 Björn Ricks <bjoern.ricks@gmail.com>
 #
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Lesser General Public
-# License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
-
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Lesser General Public License for more details.
-
-# You should have received a copy of the GNU Lesser General Public
-# License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-# 02110-1301 USA
+# See LICENSE comming with the source of python-quilt for details.
 
 import os
 
@@ -26,34 +13,32 @@ from quilt.pop import Pop
 
 class PopCommand(Command):
 
-    usage = "%prog pop [-a] [patch]"
     name = "pop"
 
-    def add_args(self, parser):
-        parser.add_option("-a", "--all", help="remove all applied patches",
-                        action="store_true")
-
-    def run(self, options, args):
+    params = dict(
+        all=dict(short="-a", help="remove all applied patches"),
+    )
+    def run(self, patch=None, all=False):
         pop = Pop(os.getcwd(), self.get_pc_dir())
         pop.unapplying.connect(self.unapplying)
         pop.unapplied.connect(self.unapplied)
         pop.empty_patch.connect(self.empty_patch)
 
-        if options.all:
+        if all:
             pop.unapply_all()
-        elif not args:
+        elif patch is None:
             pop.unapply_top_patch()
         else:
-            pop.unapply_patch(args[0])
+            pop.unapply_patch(patch)
 
     def unapplying(self, patch):
-        print "Removing patch %s" % patch.get_name()
+        print("Removing patch %s" % patch.get_name())
 
     def unapplied(self, patch):
         if not patch:
-            print "No patches applied"
+            print("No patches applied")
         else:
-            print "Now at patch %s" % patch.get_name()
+            print("Now at patch %s" % patch.get_name())
 
     def empty_patch(self, patch):
-        print "Patch %s appears to be empty, removing" % patch.get_name()
+        print("Patch %s appears to be empty, removing" % patch.get_name())
