@@ -38,13 +38,13 @@ class DeleteCommand(Command):
             sys.exit(1)
 
         if options.next:
-            delete.delete_next(options.remove, options.remove)
+            delete.delete_next(options.remove, options.backup)
         else:
             patch = None
             if len(args) > 0:
                 patch = args[0]
 
-            delete.delete_patch(patch, options.remove, options.remove)
+            delete.delete_patch(patch, options.remove, options.backup)
 
     def deleted_patch(self, patch):
         print("Removed patch %s" % patch.get_name())

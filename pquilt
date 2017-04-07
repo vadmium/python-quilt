@@ -7,6 +7,8 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
+from __future__ import print_function
+
 import sys
 import os.path
 
@@ -14,11 +16,12 @@ from quilt.cli import find_command, list_commands
 
 from quilt.error import QuiltError
 
-def usage():
-    print("%s command [--help] ..." % os.path.basename(sys.argv[0]))
-    print("Available commands:")
+def usage(file=None):
+    cmd = os.path.basename(sys.argv[0])
+    print("%s command [--help] ..." % cmd, file=file)
+    print("Available commands:", file=file)
     for cmd in list_commands():
-        print("\t" + cmd[0])
+        print("\t" + cmd[0], file=file)
 
 def main():
     if not len(sys.argv) > 1:
@@ -31,8 +34,8 @@ def main():
     try:
         cmd_cls = find_command(cmd)
         if not cmd_cls:
-            print("command %s not known." % cmd)
-            usage()
+            print("command %s not known." % cmd, file=sys.stderr)
+            usage(file=sys.stderr)
             sys.exit(2)
         cmd_cls().parse(args)
     except QuiltError as e:
