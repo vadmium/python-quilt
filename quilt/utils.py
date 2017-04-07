@@ -13,10 +13,20 @@ import inspect
 import os
 import os.path
 import shutil
+import six
 import subprocess
 import tempfile
 
 from quilt.error import QuiltError
+
+if str is bytes:  # Python < 3
+    def _encode_str(s):
+        return s
+else:  # Python 3
+    from locale import getpreferredencoding
+    _encoding = getpreferredencoding(do_setlocale=False)
+    def _encode_str(s):
+        return s.encode(_encoding)
 
 
 class SubprocessError(QuiltError):
@@ -158,7 +168,7 @@ class Directory(object):
             return self
         if isinstance(other, Directory):
             return Directory(os.path.join(self.dirname, other.dirname))
-        elif isinstance(other, basestring):
+        elif isinstance(other, six.string_types):
             return Directory(os.path.join(self.dirname, other))
         elif isinstance(other, File):
             return File(os.path.join(self.dirname, other.filename))
