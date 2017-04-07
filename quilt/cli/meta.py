@@ -49,6 +49,9 @@ class Command(metaclass=CommandMetaClass):
     A default of False implies a flag:
         param=False => add_argument("--param", action="store_true")
     
+    A single-letter option name implies one dash rather than two:
+        x=False => add_argument("-x", action="store_true")
+    
     Other default values are passed to "add_argument" and imply an optional
     positional parameter (unless it is a CLI option):
         param=default => add_argument("param", nargs="?", default=default)
@@ -109,7 +112,10 @@ class Command(metaclass=CommandMetaClass):
             except LookupError:
                 short = ()
             if default is False or short:
-                name = "--" + dest
+                if len(dest) == 1:
+                    name = "-" + dest
+                else:
+                    name = "--" + dest
             else:
                 name = dest
             if default is False:

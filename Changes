@@ -10,6 +10,7 @@
           framework
     * quilt/error.py:
         - Added new PatchAlreadyExists error class
+    * Add "series -v" option
 
     BUGFIXES
     * quilt/db.py:
