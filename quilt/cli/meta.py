@@ -6,7 +6,10 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
+from __future__ import print_function
+
 import os
+import six
 import sys
 
 from optparse import OptionParser
@@ -34,9 +37,8 @@ class CommandMetaClass(type):
         return cls
 
 
+@six.add_metaclass(CommandMetaClass)
 class Command(object):
-
-    __metaclass__ = CommandMetaClass
 
     min_args = 0
     usage = ""
@@ -85,5 +87,5 @@ class Command(object):
         return os.getcwd()
 
     def exit_error(self, error, value=1):
-        print >> sys.stderr, error
+        print(error, file=sys.stderr)
         sys.exit(value)

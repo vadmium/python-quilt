@@ -6,8 +6,11 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
+from __future__ import print_function
+
 import getopt
 import os.path
+import six
 import sys
 
 from quilt.error import QuiltError, UnknownPatch
@@ -29,7 +32,7 @@ class PatchLine(object):
         self.comment = ""
         self.patch = None
         self.line = ""
-        if isinstance(patch, basestring):
+        if isinstance(patch, six.string_types):
             self._parse_line(patch)
         elif isinstance(patch, Patch):
             self.patch = patch
@@ -76,7 +79,7 @@ class PatchLine(object):
                     elif o in ["-R", "--reverse"]:
                         reverse = True
             except getopt.GetoptError as err:
-                print >> sys.stderr, err
+                print(err, file=sys.stderr)
 
         self.patch = Patch(patch_name, strip, reverse)
 
