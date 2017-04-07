@@ -18,6 +18,11 @@ import tempfile
 
 from quilt.error import QuiltError
 
+try:  # Python 3: getargspec() is deprecated
+    _getargspec = inspect.getfullargspec
+except AttributeError:  # Python < 3
+    _getargspec = inspect.getargspec
+
 if str is bytes:  # Python < 3
     def _encode_str(s):
         return s
@@ -62,9 +67,13 @@ class Process(object):
             kw["stdin"] = subprocess.PIPE
         if suppress_output:
             kw["stdout"] = open(os.devnull, "w")
-            kw["stderr"] = open(os.devnull, "w")
+            kw["stderr"] = kw["stdout"]
         try:
-            process = subprocess.Popen(self.cmd, **kw)
+            try:
+                process = subprocess.Popen(self.cmd, **kw)
+            finally:
+                if suppress_output:
+                    kw["stdout"].close()
         except OSError as e:
             raise SubprocessError(self.cmd, e.errno, e.strerror)
 
@@ -318,7 +327,7 @@ class FunctionWrapper(object):
 
     def _get_varnames(self):
         if inspect.isfunction(self.func):
-            return inspect.getargspec(self.func)[0]
+            return _getargspec(self.func).args
         elif isinstance(self.func, FunctionWrapper):
             return self.func._get_varnames()
 
