@@ -80,6 +80,9 @@ class Pop(Command):
             try:
                 self._check_timestamps(pc_dir.get_name(), patch_name)
             except _TimestampModified as err:
+                # copy original (.pc/PATCH/) files into temp working dir
+                # patch(no_backup_if_mismatch=True, force=True)
+                # compare each patched file (or /dev/null); fail pop if any are different
                 raise QuiltError(err)
         timestamp.delete_if_exists()
 
