@@ -6,23 +6,26 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
+import os.path
 from quilt.utils import File, DirectoryParam, FileParam
 
 
 class Backup(object):
 
-    """ Class to backup files
+    """ Class to back up files
 
-    This class should be exented in future to support all functions of quilts
+    This class should be extended in the future to support all functions of quilt's
     backup-files script.
     """
 
     @DirectoryParam(["dest_dir"])
     @FileParam(["file"])
-    def backup_file(self, file, dest_dir, copy_empty=False):
-        """ Backup file in dest_dir Directory.
+    def backup_file(self, file, dest_dir, copy_empty=False, src_dir="."):
+        """ Back up file in dest_dir Directory.
+        The "file" argument determines the source file relative to
+        "src_dir" and the destination file relative to "dest_dir".
         The return value is a File object pointing to the copied file in the
-        destination directory or None if no file is copied.
+        destination directory, or None if no file is copied.
 
         If file exists and it is not empty it is copied to dest_dir.
         If file exists and it is empty the file is copied only if copy_empty is
@@ -31,17 +34,18 @@ class Backup(object):
         will be created.
         In all other cases no file will be copied and None is returned.
         """
+        dest_dir = dest_dir + file.get_directory()
+        dest_file = dest_dir + file.get_basefile()
+        file = File(os.path.join(src_dir, file.get_name()))
         if file.exists():
             if not copy_empty and file.is_empty():
                 return None
             dest_dir.create()
             file.copy(dest_dir)
-            return dest_dir + file.get_basefile()
+            return dest_file
         elif copy_empty:
             # create new file in dest_dir
-            dest_dir = dest_dir + file.get_directory()
             dest_dir.create()
-            dest_file = dest_dir + file.get_basefile()
             dest_file.touch()
             return dest_file
         else:

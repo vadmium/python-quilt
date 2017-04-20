@@ -64,3 +64,13 @@ class tmp_mapping:
 def make_file(contents, *path):
     with open(os.path.join(*path), "wb") as file:
         file.write(contents)
+
+
+@contextmanager
+def swap_dir(dir):
+    old_dir = os.getcwd()
+    try:
+        os.chdir(dir)
+        yield
+    finally:
+        os.chdir(old_dir)

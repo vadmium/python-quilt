@@ -58,9 +58,9 @@ class Revert(Command):
                 raise QuiltError("File %s is modified by patch %s" %
                                  (filename, patch.get_name()))
 
-    def _apply_patch_temporary(self, tmpdir, file, patch):
+    def _apply_patch_temporary(self, tmpdir, src_dir, file, patch):
         backup = Backup()
-        backup_file = backup.backup_file(file, tmpdir)
+        backup_file = backup.backup_file(file, tmpdir, src_dir=src_dir)
         patch_file = self.quilt_patches + File(patch.get_name())
 
         if patch_file.exists() and not patch_file.is_empty():
@@ -102,7 +102,8 @@ class Revert(Command):
         with TmpDirectory(prefix="pquilt-") as tmpdir:
             # apply current patch in temporary directory to revert changes of
             # file that aren't committed in the patch
-            tmp_file = self._apply_patch_temporary(tmpdir, pc_file, patch)
+            tmp_file = self._apply_patch_temporary(
+                tmpdir, pc_dir.get_name(), file, patch)
             if tmp_file and tmp_file.exists() and not tmp_file.is_empty():
 
                 diff = Diff(file, tmp_file)

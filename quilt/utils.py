@@ -248,7 +248,11 @@ class File(object):
         os.link(self.filename, link)
 
     def copy(self, dest):
-        """ Copy file to destination """
+        """ Copy file to destination
+        
+        If "dest" is a directory, the destination file is named after the
+        object's base name.
+        """
         if isinstance(dest, File):
             dest_dir = dest.get_directory()
             dest_dir.create()

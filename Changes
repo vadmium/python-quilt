@@ -23,10 +23,10 @@
         - Do not delete a file before restoring an unpatched version of it.
           This allows restoring a file when another Windows process has it
           open.
-    * quilt/add.py:
-        - Add._backup_file uses file directory for destination directory too
-          This fixes creating wrong patches when refreshing a patch for a file
-          in a subdirectory of the sources.
+    * quilt/backup.py:
+        - Account for subdirectories consistently when copying files. This
+          allows the "add" and "revert" operations to support files in
+          subdirectories.
     * quilt/utils.py:
         - File.copy create destination directory if it does not exit yet.
           This fixes an issue when importing a patch in a not exiting patches
