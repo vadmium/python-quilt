@@ -45,6 +45,15 @@ class Test(TestCase):
             with open(os.path.join(dir, "subdir", "file"), "rb") as file:
                 self.assertEqual(file.read(), b"patched\n")
 
+    def test_remove(self):
+        """ Revert to nonexistent file """
+        with _set_up_patch() as [dir, series, originals]:
+            make_file(b"", originals, "test-file")
+            make_file(b"changed\n", dir, "test-file")
+            q = quilt.revert.Revert(dir, quilt_pc=dir, quilt_patches=series)
+            q.revert_file("test-file")
+            self.assertFalse(os.path.exists(os.path.join(dir, "test-file")))
+
 @contextmanager
 def _set_up_patch():
     with tmp_series() as [dir, series], \
