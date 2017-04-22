@@ -6,9 +6,11 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
+from errno import ENOENT
 import os
 import os.path
 
+from quilt.error import QuiltError
 from quilt.utils import Process, DirectoryParam, _EqBase, File, FileParam, \
                         SubprocessError
 
@@ -30,37 +32,21 @@ class Patch(_EqBase):
         backup: Directory to hold backups.
         work_dir: Source tree to be patched.
         """
-        cmd = ["patch"]
         cmd.append("-p" + str(self.strip))
-
-        if backup:
-            cmd.append("--backup")
-            cmd.append("--prefix")
-            if not backup[-1] == os.sep:
-                backup += os.sep
-            cmd.append(backup)
-        else:
-            cmd.append("--no-backup-if-mismatch")
 
         if self.reverse:
             cmd.append("-R")
 
-        cmd.append("-d")
-        cmd.append(work_dir)
-
-        cmd.append("-f")
-
-        cmd.append("-i")
         name = os.path.join(patch_dir, self.get_name())
-        cmd.append(name)
+        _patch_tree(name, work_dir,
+            backup=backup,
+        )
 
         if quiet:
             cmd.append("-s")
 
         if dry_run:
             cmd.append("--dry-run")
-
-        Process(cmd).run(suppress_output=suppress_output)
 
     def get_name(self):
         return self.patch_name
@@ -75,9 +61,9 @@ class Patch(_EqBase):
             name = file.get_name()
         else:
             name = self.get_name()
-        with open(name, "rb") as f:
-            for line in f:
-                if line.startswith(b"---") or line.startswith(b"Index:"):
+        with _Parser(name) as parser:
+            for line in parser:
+                if parser.get_index() or parser.get_filename():
                     break
                 lines.append(line)
 
@@ -186,3 +172,167 @@ class Diff(object):
             else:
                 raise e
         return True
+
+
+class _Parser:
+    def __init__(self, name):
+        self._f = open(name, "rb")
+        self._lines = iter(self._f)
+        self._index = None
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._f.close()
+    
+    def __iter__(self):
+        for self._line in self._lines:
+            yield self._line
+    
+    def get_index(self):
+        if not self._line.startswith(b"Index:"):
+            return False
+        
+        line = _strip_newline(self._line)
+        prefix = b"Index: "
+        if not line.startswith(prefix):
+            raise QuiltError("Invalid patch index line")
+        self._index = line[len(prefix):]
+        return True
+    
+    def get_filename(self):
+        if not self._line.startswith(b"---"):
+            return None
+        
+        try:
+            line = next(self._lines)
+        except StopIteration:
+            raise QuiltError("Truncated filename information")
+        prefix = b"+++ "
+        if not line.startswith(prefix):
+            raise QuiltError("Invalid destination filename line")
+        [filename, line] = line[len(prefix):].split(b"\t", 1)
+        
+        if self._index is not None:
+            filename = self._index
+            self._index = None
+        try:  # Python 3
+            filename = os.fsdecode(filename)
+        except AttributeError:  # Python < 3
+            pass
+        return filename
+    
+    def get_range(self):
+        prefix = b"@@ -"
+        if not self._line.startswith(prefix):
+            return None
+        [src, line] = self._line[len(prefix):].split(b" +", 1)
+        [src_begin, self._src_count] = _parse_range(src)
+        [dest, line] = line.split(b" ", 1)
+        [dest_begin, self._dest_count] = _parse_range(dest)
+        return (src_begin, self._src_count, dest_begin, self._dest_count)
+    
+    def get_hunk_lines(self):
+        while self._src_count or self._dest_count:
+            try:
+                line = next(self._lines)
+            except StopIteration:
+                raise QuiltError("Truncated patch hunk")
+            stripped = _strip_newline(line)
+            in_src = stripped[:1] in {b"", b" ", b"-"}
+            in_dest = stripped[:1] in {b"", b" ", b"+"}
+            if in_src:
+                if self._src_count == 0:
+                    raise QuiltError("Expected added line")
+                self._src_count -= 1
+            if in_dest:
+                if self._dest_count == 0:
+                    raise QuiltError("Expected deleted line")
+                self._dest_count -= 1
+            yield (in_src, in_dest, line[1:])
+
+
+def _parse_range(range):
+    [begin, sep, count] = range.partition(b",")
+    begin = int(begin)
+    if sep:
+        count = int(count)
+    else:
+        count = 1
+    if count:
+        begin -= 1
+    return (begin, count)
+
+
+def _strip_newline(line):
+    if not line.endswith(b"\n"):
+        raise QuiltError("Truncated line in patch file")
+    line = line[:-1]
+    if line.endswith(b"\r"):
+        line = line[:-1]
+    if b"\r" in line:
+        raise QuiltError("Unexpected CR in patch file")
+    return line
+
+
+def _patch_tree(name, work_dir=".", backup=None):
+    with _Parser(name) as parser:
+        file = None
+        try:
+            for line in parser:
+                if parser.get_index():
+                    continue
+                filename = parser.get_filename()
+                if filename is not None:
+                    if file:
+                        file.close()
+                    file = _FilePatcher(filename,
+                        work_dir=work_dir)
+                    continue
+                
+                if file is None:
+                    continue
+                hunk = parser.get_range()
+                if hunk is None:
+                    continue
+                [src_begin, src_count, dest_begin, dest_count] = hunk
+                hunk = parser.get_hunk_lines()
+                file.apply_hunk(src_begin, hunk)
+        finally:
+            if file:
+                file.close()
+
+
+class _FilePatcher:
+    def __init__(self, filename,
+            work_dir="."):
+        self._filename = os.path.join(work_dir, filename)
+        try:
+            self._src = open(self._filename, "rb")
+        except EnvironmentError as err:
+            if err.errno != ENOENT:
+                raise
+            raise Conflict(err)
+        self._src_lines = 0
+    
+    def apply_hunk(self, begin, hunk):
+        if begin < self._src_lines:
+            raise QuiltError("Source hunks out of order")
+        for i in range(self._src_lines, begin):
+            line = self._src.readline()
+            if not line:
+                raise Conflict("Source file too short")
+            self._src_lines += 1
+        for [in_src, in_dest, line] in hunk:
+            if in_src:
+                if self._src.readline() != line:
+                    raise Conflict("Source line mismatch")
+                self._src_lines += 1
+    
+    def close(self):
+        self._src.close()
+
+
+class Conflict(QuiltError):
+    pass

@@ -7,8 +7,7 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-from contextlib import contextmanager
-import os, os.path
+import os.path
 import six
 
 from helpers import QuiltTest, make_file, tmp_series
@@ -101,12 +100,10 @@ class PushTest(QuiltTest):
             series.save()
             cmd = Push(dir, quilt_pc=dir, quilt_patches=series.dirname)
             with six.assertRaisesRegex(
-                        self, QuiltError, r"does not apply"), \
-                    self._suppress_output():
+                        self, QuiltError, r"does not apply"):
                 cmd.apply_next_patch(quiet=True)
             with six.assertRaisesRegex(self, QuiltError,
-                        r"Applied patch.*needs refresh"), \
-                    self._suppress_output():
+                        r"Applied patch.*needs refresh"):
                 cmd.apply_next_patch(quiet=True, force=True)
     
     def test_without_refresh(self):
@@ -116,8 +113,7 @@ class PushTest(QuiltTest):
             series.save()
             cmd = Push(dir, quilt_pc=dir, quilt_patches=series.dirname)
             with six.assertRaisesRegex(self, QuiltError,
-                        r"Applied patch.*needs refresh"), \
-                    self._suppress_output():
+                        r"Applied patch.*needs refresh"):
                 cmd.apply_next_patch(quiet=True, force=True)
             with six.assertRaisesRegex(self, QuiltError,
                     r"needs to be refreshed"):
@@ -156,24 +152,6 @@ class PushTest(QuiltTest):
             b"-old\n"
             b"+new\n", series.dirname, "conflict.patch")
         make_file(b"conflict\n", dir, "file")
-    
-    @contextmanager
-    def _suppress_output(self):
-        """ Silence error messages from the "patch" command """
-        STDOUT_FILENO = 1
-        STDERR_FILENO = 2
-        with open(os.devnull, "w") as null:
-            stdout = os.dup(STDOUT_FILENO)
-            stderr = os.dup(STDERR_FILENO)
-            os.dup2(null.fileno(), STDOUT_FILENO)
-            os.dup2(null.fileno(), STDERR_FILENO)
-        try:
-            yield
-        finally:
-            os.dup2(stdout, STDOUT_FILENO)
-            os.dup2(stderr, STDERR_FILENO)
-            os.close(stdout)
-            os.close(stderr)
 
 
 if __name__ == "__main__":
