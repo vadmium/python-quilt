@@ -37,6 +37,7 @@ class Patch(_EqBase):
         backup: Directory to hold backups.
         work_dir: Source tree to be patched.
         """
+        # TODO: handle missing newline at EOF case
         if self.reverse:
             cmd.append("-R")
 
