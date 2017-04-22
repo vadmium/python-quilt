@@ -65,9 +65,8 @@ class Revert(Command):
 
         if patch_file.exists() and not patch_file.is_empty():
             try:
-                patch.run(self.cwd, self.quilt_patches.get_absdir(),
-                          work_dir=tmpdir, no_backup_if_mismatch=True,
-                          remove_empty_files=True, force=True,
+                patch.run(self.quilt_patches.get_name(),
+                          work_dir=tmpdir.get_name(),
                           quiet=True, suppress_output=True,
                 )
             except SubprocessError:

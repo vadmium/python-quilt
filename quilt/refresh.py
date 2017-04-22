@@ -76,7 +76,8 @@ class Refresh(Command):
             if edit:
                 self.edit_patch(tmpfile)
                 tpatch = Patch(tmpfile.get_name())
-                tpatch.run(pc_dir.get_name(), dry_run=True, quiet=True)
+                tpatch.run(work_dir=pc_dir.get_name(),
+                    dry_run=True, quiet=True)
 
             if patch_file.exists():
                 diff = Diff(patch_file, tmpfile)

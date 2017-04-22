@@ -42,8 +42,9 @@ class Push(Command):
 
         if patch_file.exists():
             try:
-                patch.run(self.cwd, patch_dir=self.quilt_patches, backup=True,
-                          prefix=pc_dir.get_name(), quiet=quiet)
+                patch.run(work_dir=self.cwd,
+                    patch_dir=self.quilt_patches.get_name(),
+                    backup=pc_dir.get_name(), quiet=quiet)
             except SubprocessError as e:
                 if not force:
                     patch = RollbackPatch(self.cwd, pc_dir)

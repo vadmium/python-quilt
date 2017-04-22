@@ -8,6 +8,14 @@
     * quilt/new.py:
         - Added new New class to be able to reuse the cli code in a python
           framework
+    * quilt.patch.Patch.run:
+        - Simplify the API. Remove the "cwd" parameter. No longer support
+          directory objects as "patch_dir" and "work_dir" arguments. Drop
+          "force"; always apply patches without user interaction. Drop
+          "remove_empty_files", the use of which seemed inconsistent, and to
+          have little effect. Merge the "prefix" parameter into the "backup"
+          parameter. Drop "no_backup_if_mismatch"; never leave in-tree
+          backups (*.orig). Drop "reverse".
     * quilt/error.py:
         - Added new PatchAlreadyExists error class
     * quilt/cli:
@@ -116,7 +124,7 @@
         - UnknownPatch new class UnknownPatch replaces InvalidPatchError
     * quilt/patch.py:
         - Patch.run new optional parameters quiet and dry_run.
-        - Patch.run work_dir and patch_dir are now Direcory parameters
+        - Patch.run work_dir and patch_dir are now Directory parameters
         - Patch.get_header new method to return the header of a patch
     * quilt/pop.py:
         - Pop add new signals empty_patch, unapplying, unapplied_patch and

@@ -22,46 +22,36 @@ class Patch(_EqBase):
         self.strip = strip
         self.reverse = reverse
 
-    @DirectoryParam(["patch_dir", "work_dir"])
-    def run(self, cwd, patch_dir=None, backup=False, prefix=None,
-            reverse=False, work_dir=None, force=False, dry_run=False,
-            no_backup_if_mismatch=False, remove_empty_files=False,
+    def run(self, patch_dir=".", backup=None,
+            work_dir=".", dry_run=False,
             quiet=False, suppress_output=False):
+        """
+        patch_dir: Base directory of the patch file.
+        backup: Directory to hold backups.
+        work_dir: Source tree to be patched.
+        """
         cmd = ["patch"]
         cmd.append("-p" + str(self.strip))
 
         if backup:
             cmd.append("--backup")
-
-        if prefix:
             cmd.append("--prefix")
-            if not prefix[-1] == os.sep:
-                prefix += os.sep
-            cmd.append(prefix)
-
-        reverse = reverse != self.reverse
-        if reverse:
-            cmd.append("-R")
-
-        if work_dir:
-            cmd.append("-d")
-            cmd.append(work_dir.get_name())
-
-        if no_backup_if_mismatch:
+            if not backup[-1] == os.sep:
+                backup += os.sep
+            cmd.append(backup)
+        else:
             cmd.append("--no-backup-if-mismatch")
 
-        if remove_empty_files:
-            cmd.append("--remove-empty-files")
+        if self.reverse:
+            cmd.append("-R")
 
-        if force:
-            cmd.append("-f")
+        cmd.append("-d")
+        cmd.append(work_dir)
+
+        cmd.append("-f")
 
         cmd.append("-i")
-        if patch_dir:
-            dir = patch_dir + self.get_name()
-            name = dir.get_name()
-        else:
-            name = self.get_name()
+        name = os.path.join(patch_dir, self.get_name())
         cmd.append(name)
 
         if quiet:
@@ -70,7 +60,7 @@ class Patch(_EqBase):
         if dry_run:
             cmd.append("--dry-run")
 
-        Process(cmd).run(cwd=cwd, suppress_output=suppress_output)
+        Process(cmd).run(suppress_output=suppress_output)
 
     def get_name(self):
         return self.patch_name
