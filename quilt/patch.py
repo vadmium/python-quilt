@@ -45,9 +45,6 @@ class Patch(_EqBase):
             backup=backup,
         )
 
-        if quiet:
-            cmd.append("-s")
-
     def get_name(self):
         return self.patch_name
 
