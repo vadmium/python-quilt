@@ -180,6 +180,7 @@ class _Parser:
         self._f = open(name, "rb")
         self._lines = iter(self._f)
         self._index = None
+        self._src_exists = None
     
     def __enter__(self):
         return self
@@ -206,6 +207,13 @@ class _Parser:
         if not self._line.startswith(b"---"):
             return None
         
+        line = _strip_newline(self._line)
+        prefix = b"--- "
+        if not line.startswith(prefix):
+            raise QuiltError("Invalid source filename line")
+        [src, sep, line] = line[len(prefix):].partition(b"\t")
+        self._src_exists = src != b"/dev/null"
+        
         try:
             line = _strip_newline(next(self._lines))
         except StopIteration:
@@ -213,27 +221,36 @@ class _Parser:
         prefix = b"+++ "
         if not line.startswith(prefix):
             raise QuiltError("Invalid destination filename line")
-        [filename, sep, line] = line[len(prefix):].partition(b"\t")
+        [dest, sep, line] = line[len(prefix):].partition(b"\t")
+        self._dest_exists = dest != b"/dev/null"
         
         if self._index is not None:
             filename = self._index
             self._index = None
+        elif self._src_exists:
+            filename = src
+        else:
+            filename = dest
         try:  # Python 3
             filename = os.fsdecode(filename)
         except AttributeError:  # Python < 3
             pass
         if filename.startswith("/"):
             raise QuiltError("Absolute filename in patch")
-        return filename.split("/")
+        return (filename.split("/"), self._src_exists, self._dest_exists)
     
     def get_range(self):
+        if self._src_exists is None:
+            return None  # No filename information seen yet
         prefix = b"@@ -"
         if not self._line.startswith(prefix):
             return None
+        
         [src, line] = self._line[len(prefix):].split(b" +", 1)
-        [src_begin, self._src_count] = _parse_range(src)
+        [src_begin, self._src_count] = _parse_range(src, self._src_exists)
         [dest, line] = line.split(b" ", 1)
-        [dest_begin, self._dest_count] = _parse_range(dest)
+        [dest_begin, self._dest_count] = \
+            _parse_range(dest, self._dest_exists)
         return (src_begin, self._src_count, dest_begin, self._dest_count)
     
     def get_hunk_lines(self):
@@ -256,15 +273,19 @@ class _Parser:
             yield (in_src, in_dest, line[1:])
 
 
-def _parse_range(range):
+def _parse_range(range, exists):
     [begin, sep, count] = range.partition(b",")
     begin = int(begin)
     if sep:
         count = int(count)
     else:
         count = 1
+    if not exists and count:
+        raise QuiltError("Invalid line count for absent file")
     if count:
         begin -= 1
+    if not exists and begin:
+        raise QuiltError("Invalid beginning line number for absent file")
     return (begin, count)
 
 
@@ -289,43 +310,51 @@ def _patch_tree(name, work_dir=".", strip=0, backup=None):
                 filename = parser.get_filename()
                 if filename is not None:
                     if file:
-                        file.close()
+                        file.finish()
+                    [filename, src_exists, dest_exists] = filename
                     if len(filename) <= strip:
                         raise \
                             QuiltError("Not enough path components to strip")
                     filename = filename[strip:]
-                    file = _FilePatcher(filename,
+                    file = _FilePatcher(filename, src_exists, dest_exists,
                         work_dir=work_dir)
                     continue
                 
-                if file is None:
-                    continue
                 hunk = parser.get_range()
                 if hunk is None:
                     continue
                 [src_begin, src_count, dest_begin, dest_count] = hunk
                 hunk = parser.get_hunk_lines()
                 file.apply_hunk(src_begin, hunk)
+            if file:
+                file.finish()
         finally:
             if file:
                 file.close()
 
 
 class _FilePatcher:
-    def __init__(self, filename,
+    def __init__(self, filename, src_exists, dest_exists,
             work_dir="."):
         self._filename = os.path.join(work_dir, *filename)
-        try:
-            self._src = open(self._filename, "rb")
-        except EnvironmentError as err:
-            if err.errno != ENOENT:
-                raise
-            raise Conflict(err)
+        self._dest_exists = dest_exists
+        
+        if src_exists:
+            try:
+                self._src = open(self._filename, "rb")
+            except EnvironmentError as err:
+                if err.errno != ENOENT:
+                    raise
+                raise Conflict(err)
+        else:
+            self._src = None
         self._src_lines = 0
     
     def apply_hunk(self, begin, hunk):
         if begin < self._src_lines:
             raise QuiltError("Source hunks out of order")
+        if begin > self._src_lines and not self._dest_exists:
+            raise QuiltError("Missing deleted lines")
         for i in range(self._src_lines, begin):
             line = self._src.readline()
             if not line:
@@ -337,8 +366,15 @@ class _FilePatcher:
                     raise Conflict("Source line mismatch")
                 self._src_lines += 1
     
+    def finish(self):
+        if self._src:
+            if not self._dest_exists and self._src.read(1):
+                raise Conflict("Extra data in deleted file")
+            self._src.close()
+    
     def close(self):
-        self._src.close()
+        if self._src:
+            self._src.close()
 
 
 class Conflict(QuiltError):
