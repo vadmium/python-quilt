@@ -16,6 +16,8 @@
           have little effect. Merge the "prefix" parameter into the "backup"
           parameter. Drop "no_backup_if_mismatch"; never leave in-tree
           backups (*.orig). Drop "reverse".
+        - Eliminate the external "patch" command and implement "Patch.run" in
+          Python.
     * quilt/error.py:
         - Added new PatchAlreadyExists error class
     * quilt/cli:
