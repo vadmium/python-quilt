@@ -207,13 +207,13 @@ class _Parser:
             return None
         
         try:
-            line = next(self._lines)
+            line = _strip_newline(next(self._lines))
         except StopIteration:
             raise QuiltError("Truncated filename information")
         prefix = b"+++ "
         if not line.startswith(prefix):
             raise QuiltError("Invalid destination filename line")
-        [filename, line] = line[len(prefix):].split(b"\t", 1)
+        [filename, sep, line] = line[len(prefix):].partition(b"\t")
         
         if self._index is not None:
             filename = self._index
