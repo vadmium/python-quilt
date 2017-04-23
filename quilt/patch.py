@@ -334,6 +334,7 @@ def _patch_tree(name, work_dir=".", strip=0, dry_run=False, backup=None):
 class _FilePatcher:
     def __init__(self, filename, src_exists, dest_exists,
             work_dir=".", dry_run=False, backup=None):
+        # TODO: , validate entries like ".."
         self._filename = os.path.join(work_dir, *filename)
         self._dest_exists = dest_exists
         
