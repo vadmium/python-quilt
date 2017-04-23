@@ -9,6 +9,8 @@
 from errno import ENOENT
 import os
 import os.path
+from shutil import copyfileobj
+from tempfile import NamedTemporaryFile
 
 from quilt.error import QuiltError
 from quilt.utils import Process, DirectoryParam, _EqBase, File, FileParam, \
@@ -39,15 +41,12 @@ class Patch(_EqBase):
             cmd.append("-R")
 
         name = os.path.join(patch_dir, self.get_name())
-        _patch_tree(name, work_dir, strip=int(self.strip),
+        _patch_tree(name, work_dir, strip=int(self.strip), dry_run=dry_run,
             backup=backup,
         )
 
         if quiet:
             cmd.append("-s")
-
-        if dry_run:
-            cmd.append("--dry-run")
 
     def get_name(self):
         return self.patch_name
@@ -300,7 +299,7 @@ def _strip_newline(line):
     return line
 
 
-def _patch_tree(name, work_dir=".", strip=0, backup=None):
+def _patch_tree(name, work_dir=".", strip=0, dry_run=False, backup=None):
     with _Parser(name) as parser:
         file = None
         try:
@@ -317,7 +316,7 @@ def _patch_tree(name, work_dir=".", strip=0, backup=None):
                             QuiltError("Not enough path components to strip")
                     filename = filename[strip:]
                     file = _FilePatcher(filename, src_exists, dest_exists,
-                        work_dir=work_dir)
+                        work_dir=work_dir, dry_run=dry_run)
                     continue
                 
                 hunk = parser.get_range()
@@ -335,7 +334,7 @@ def _patch_tree(name, work_dir=".", strip=0, backup=None):
 
 class _FilePatcher:
     def __init__(self, filename, src_exists, dest_exists,
-            work_dir="."):
+            work_dir=".", dry_run=False):
         self._filename = os.path.join(work_dir, *filename)
         self._dest_exists = dest_exists
         
@@ -349,6 +348,15 @@ class _FilePatcher:
         else:
             self._src = None
         self._src_lines = 0
+        
+        if self._dest_exists and not dry_run:
+            self._dest = NamedTemporaryFile(delete=False,
+                dir=os.path.join(work_dir, *filename[:-1]),
+                prefix=filename[-1] + "~",
+            )
+            self._temp_dest = self._dest.name
+        else:
+            self._dest = None
     
     def apply_hunk(self, begin, hunk):
         if begin < self._src_lines:
@@ -360,21 +368,37 @@ class _FilePatcher:
             if not line:
                 raise Conflict("Source file too short")
             self._src_lines += 1
+            if self._dest:
+                self._dest.write(line)
         for [in_src, in_dest, line] in hunk:
             if in_src:
                 if self._src.readline() != line:
                     raise Conflict("Source line mismatch")
                 self._src_lines += 1
+            if in_dest and self._dest:
+                self._dest.write(line)
     
     def finish(self):
         if self._src:
+            if self._dest:
+                copyfileobj(self._src, self._dest)
             if not self._dest_exists and self._src.read(1):
                 raise Conflict("Extra data in deleted file")
             self._src.close()
+        if self._dest:
+            self._dest.close()
+            if self._src:
+                os.remove(self._filename)
+                self._dest = None
+            os.rename(self._temp_dest, self._filename)
+            self._dest = None
     
     def close(self):
         if self._src:
             self._src.close()
+        if self._dest:
+            self._dest.close()
+            os.remove(self._temp_dest)
 
 
 class Conflict(QuiltError):
