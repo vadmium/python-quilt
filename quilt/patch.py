@@ -20,6 +20,9 @@ class Patch(_EqBase):
     """ Wrapper around the patch util """
 
     def __init__(self, patch_name, strip=1, reverse=False):
+        """
+        strip: May be an integer or a decimal string.
+        """
         self.patch_name = patch_name
         self.strip = strip
         self.reverse = reverse
@@ -32,13 +35,11 @@ class Patch(_EqBase):
         backup: Directory to hold backups.
         work_dir: Source tree to be patched.
         """
-        cmd.append("-p" + str(self.strip))
-
         if self.reverse:
             cmd.append("-R")
 
         name = os.path.join(patch_dir, self.get_name())
-        _patch_tree(name, work_dir,
+        _patch_tree(name, work_dir, strip=int(self.strip),
             backup=backup,
         )
 
@@ -221,7 +222,9 @@ class _Parser:
             filename = os.fsdecode(filename)
         except AttributeError:  # Python < 3
             pass
-        return filename
+        if filename.startswith("/"):
+            raise QuiltError("Absolute filename in patch")
+        return filename.split("/")
     
     def get_range(self):
         prefix = b"@@ -"
@@ -276,7 +279,7 @@ def _strip_newline(line):
     return line
 
 
-def _patch_tree(name, work_dir=".", backup=None):
+def _patch_tree(name, work_dir=".", strip=0, backup=None):
     with _Parser(name) as parser:
         file = None
         try:
@@ -287,6 +290,10 @@ def _patch_tree(name, work_dir=".", backup=None):
                 if filename is not None:
                     if file:
                         file.close()
+                    if len(filename) <= strip:
+                        raise \
+                            QuiltError("Not enough path components to strip")
+                    filename = filename[strip:]
                     file = _FilePatcher(filename,
                         work_dir=work_dir)
                     continue
@@ -307,7 +314,7 @@ def _patch_tree(name, work_dir=".", backup=None):
 class _FilePatcher:
     def __init__(self, filename,
             work_dir="."):
-        self._filename = os.path.join(work_dir, filename)
+        self._filename = os.path.join(work_dir, *filename)
         try:
             self._src = open(self._filename, "rb")
         except EnvironmentError as err:
