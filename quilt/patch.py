@@ -461,6 +461,7 @@ class _FilePatcher:
                 self._dest.seek(dest_pos)
                 self._dest.write(intervening)
                 self._dest.write(dest_hunk)
+            # TODO: retry with one and two lines of context stripped at start and end
     
     def finish(self):
         if self._src:
