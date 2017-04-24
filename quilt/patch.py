@@ -377,7 +377,7 @@ class _FilePatcher:
                 )
                 self._temp_dest = self._dest.name
             else:
-                self._dest = open(self._filename, "wb")
+                self._dest = open(self._filename, "w+b")
                 self._temp_dest = None
         else:
             self._dest = None
@@ -387,20 +387,81 @@ class _FilePatcher:
             raise QuiltError("Source hunks out of order")
         if begin > self._src_lines and not self._dest_exists:
             raise QuiltError("Missing deleted lines")
-        for i in range(self._src_lines, begin):
-            line = self._src.readline()
-            if not line:
-                raise Conflict("Source file too short")
-            self._src_lines += 1
+        if self._src:
+            src_line = self._src_lines
+            src_pos = self._src.tell()
             if self._dest:
-                self._dest.write(line)
-        for [in_src, in_dest, line] in hunk:
-            if in_src:
-                if self._src.readline() != line:
-                    raise Conflict("Source line mismatch")
+                dest_pos = self._dest.tell()
+        try:
+            for i in range(self._src_lines, begin):
+                line = self._src.readline()
+                if not line:
+                    src_hunk_stop = None
+                    raise Conflict("Source file too short")
                 self._src_lines += 1
-            if in_dest and self._dest:
-                self._dest.write(line)
+                if self._dest:
+                    self._dest.write(line)
+            if self._src:
+                src_hunk_start = self._src.tell()
+                if self._dest:
+                    dest_hunk_start = self._dest.tell()
+            for [in_src, in_dest, line] in hunk:
+                if in_src:
+                    src_hunk_stop = self._src.tell()
+                    if self._src.readline() != line:
+                        raise Conflict("Source line mismatch")
+                    self._src_lines += 1
+                if in_dest and self._dest:
+                    self._dest.write(line)
+        except Conflict:
+            if not self._dest_exists:
+                raise
+            
+            self._src.seek(src_pos)
+            src = b"\n" + self._src.read()  # Newline helps find whole lines
+            
+            begin_pos = 0
+            try:
+                for i in range(begin - src_line):
+                    begin_pos = src.index(b"\n", begin_pos + 1)
+            except ValueError:
+                begin_pos = len(src) - 1
+            
+            if src_hunk_stop is None:
+                src_hunk = bytearray(b"\n")  # Newline sentinel
+            else:
+                src_hunk_start -= src_pos
+                src_hunk_stop -= src_pos
+                src_hunk = bytearray(src[src_hunk_start : 1 + src_hunk_stop])
+                src_hunk.extend(line)
+            size = self._dest.tell() - dest_hunk_start
+            self._dest.seek(dest_hunk_start)
+            dest_hunk = bytearray(self._dest.read(size))
+            for [in_src, in_dest, line] in hunk:
+                if in_src:
+                    src_hunk.extend(line)
+                if in_dest:
+                    dest_hunk.extend(line)
+            self._src_lines = src_line + src_hunk.count(b"\n", 1)
+            
+            forward = src.find(src_hunk, begin_pos)
+            backward = src.rfind(src_hunk, 0, begin_pos + 1)
+            if forward < 0 and backward < 0:
+                raise Conflict("Source hunk not found")
+            if backward < 0 or forward >= 0 \
+                    and forward - begin_pos >= begin_pos - backward:
+                found = forward
+            else:
+                found = backward
+            
+            intervening = src[1:found + 1]
+            lines = intervening.count(b"\n")
+            self._src_lines += lines
+            self._src.seek(src_pos + found + len(src_hunk))
+            if self._dest:
+                self._dest.seek(dest_pos)
+                self._dest.write(intervening)
+                self._dest.write(dest_hunk)
     
     def finish(self):
         if self._src:
@@ -410,6 +471,7 @@ class _FilePatcher:
                 raise Conflict("Extra data in deleted file")
             self._src.close()
         if self._dest:
+            self._dest.truncate()
             self._dest.close()
             if self._temp_dest is not None:
                 if self._src:
