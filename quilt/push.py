@@ -6,7 +6,8 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-import os.path
+from errno import EEXIST
+import os, os.path
 
 from quilt.command import Command
 from quilt.db import Db, Series
@@ -32,6 +33,11 @@ class Push(Command):
         self.series = Series(quilt_patches)
 
     def _apply_patch(self, patch, force=False, quiet=False):
+        try:
+            os.mkdir(self.quilt_pc.get_name())
+        except OSError as err:
+            if err.errno != EEXIST:
+                raise
         patch_name = patch.get_name()
         pc_dir = self.quilt_pc + patch_name
         patch_file = self.quilt_patches + File(patch_name)
@@ -41,6 +47,7 @@ class Push(Command):
         self.applying_patch(patch)
 
         if patch_file.exists():
+            os.mkdir(pc_dir.get_name())
             try:
                 patch.run(work_dir=self.cwd,
                     patch_dir=self.quilt_patches.get_name(),

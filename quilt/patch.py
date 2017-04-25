@@ -6,7 +6,7 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
-from errno import ENOENT
+from errno import EEXIST, ENOENT
 import os
 import os.path
 from shutil import copyfileobj
@@ -316,7 +316,7 @@ def _patch_tree(name, work_dir=".", strip=0, dry_run=False, backup=None):
                             QuiltError("Not enough path components to strip")
                     filename = filename[strip:]
                     file = _FilePatcher(filename, src_exists, dest_exists,
-                        work_dir=work_dir, dry_run=dry_run)
+                        work_dir=work_dir, dry_run=dry_run, backup=backup)
                     continue
                 
                 hunk = parser.get_range()
@@ -334,13 +334,27 @@ def _patch_tree(name, work_dir=".", strip=0, dry_run=False, backup=None):
 
 class _FilePatcher:
     def __init__(self, filename, src_exists, dest_exists,
-            work_dir=".", dry_run=False):
+            work_dir=".", dry_run=False, backup=None):
         self._filename = os.path.join(work_dir, *filename)
         self._dest_exists = dest_exists
         
+        if backup is not None:
+            for i in range(len(filename) - 1):
+                backup = os.path.join(backup, filename[i])
+                try:
+                    os.mkdir(backup)
+                except OSError as err:
+                    if err.errno != EEXIST:
+                        raise
+            backup = os.path.join(backup, filename[-1])
         if src_exists:
             try:
-                self._src = open(self._filename, "rb")
+                if backup is None:
+                    src_name = self._filename
+                else:
+                    os.rename(self._filename, backup)
+                    src_name = backup
+                self._src = open(src_name, "rb")
             except EnvironmentError as err:
                 if err.errno != ENOENT:
                     raise
@@ -350,11 +364,15 @@ class _FilePatcher:
         self._src_lines = 0
         
         if self._dest_exists and not dry_run:
-            self._dest = NamedTemporaryFile(delete=False,
-                dir=os.path.join(work_dir, *filename[:-1]),
-                prefix=filename[-1] + "~",
-            )
-            self._temp_dest = self._dest.name
+            if backup is None:
+                self._dest = NamedTemporaryFile(delete=False,
+                    dir=os.path.join(work_dir, *filename[:-1]),
+                    prefix=filename[-1] + "~",
+                )
+                self._temp_dest = self._dest.name
+            else:
+                self._dest = open(self._filename, "wb")
+                self._temp_dest = None
         else:
             self._dest = None
     
@@ -387,18 +405,20 @@ class _FilePatcher:
             self._src.close()
         if self._dest:
             self._dest.close()
-            if self._src:
-                os.remove(self._filename)
+            if self._temp_dest is not None:
+                if self._src:
+                    os.remove(self._filename)
+                    self._dest = None
+                os.rename(self._temp_dest, self._filename)
                 self._dest = None
-            os.rename(self._temp_dest, self._filename)
-            self._dest = None
     
     def close(self):
         if self._src:
             self._src.close()
         if self._dest:
             self._dest.close()
-            os.remove(self._temp_dest)
+            if self._temp_dest is not None:
+                os.remove(self._temp_dest)
 
 
 class Conflict(QuiltError):
