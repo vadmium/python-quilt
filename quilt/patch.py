@@ -360,6 +360,11 @@ class _FilePatcher:
                     raise
                 raise Conflict(err)
         else:
+            if os.path.exists(self._filename):
+                raise Conflict("File already exists: " + self._filename)
+            if backup is not None:
+                with open(backup, "w"):
+                    pass
             self._src = None
         self._src_lines = 0
         
