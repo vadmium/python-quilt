@@ -236,6 +236,7 @@ class _Parser:
             pass
         if filename.startswith("/"):
             raise QuiltError("Absolute filename in patch")
+        filename = filename.replace(os.sep, "/")
         return (filename.split("/"), self._src_exists, self._dest_exists)
     
     def get_range(self):
