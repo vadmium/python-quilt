@@ -87,6 +87,7 @@ class Revert(Command):
 
             if not patch:
                 raise QuiltError("No patch available. Nothing to revert.")
+        patch = self.series.patch2line[patch].get_patch()
 
         self._file_in_patch(filename, patch)
         self._file_in_next_patches(filename, patch)

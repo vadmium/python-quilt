@@ -49,6 +49,8 @@
         - Add missing import for Patch class.
         - Handle when there are multiple files in a patch
         - Remove the file if it did not exist or was removed by the patch.
+        - Respect the patch options (-p, -R) in the series file, rather than
+          assuming -p1.
     * quilt/delete.py:
         - Choose the first unapplied patch in "delete_next" rather than
           complaining no patches are applied
