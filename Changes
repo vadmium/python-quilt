@@ -13,6 +13,7 @@
     * quilt/cli:
         - Replaced optparse with argparse.
         - Add "series -v" option.
+        - Add "import -p LEVEL -R" options.
 
     BUGFIXES
     * quilt/db.py:
