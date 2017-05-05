@@ -87,6 +87,17 @@ class PushTest(QuiltTest):
             self.assertTrue(f1.exists())
             self.assertTrue(f2.exists())
     
+    def test_applied_patches(self):
+        """ Check the format of .pc/applied-patches """
+        with tmp_series() as [dir, series]:
+            make_file(b"test.patch -p0 -R\n", series.series_file)
+            q = Push(dir, quilt_pc=dir, quilt_patches=series.dirname)
+            q.apply_next_patch()
+            with open(q.db.series_file, "r") as applied:
+                # Ignore newline differences
+                applied = applied.read().splitlines()
+            self.assertSequenceEqual(applied, ("test.patch",))
+    
     def test_upto_applied(self):
         """ Push up to a specified patch when a patch is already applied """
         top = os.path.join(test_dir, "data", "pop", "test1")

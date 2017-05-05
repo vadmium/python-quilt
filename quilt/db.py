@@ -319,6 +319,12 @@ class Db(PatchSeries):
             raise DBError("The quilt meta-data version of %r is not supported "
                           "by python-quilt. Python-quilt only supports "
                           "version %r" % (version, DB_VERSION))
+    
+    def add_patch(self, patch):
+        if isinstance(patch, Patch):
+            # Do not include patch options (-p, -R) in "applied-patches"
+            patch = Patch(patch.get_name())
+        return super(Db, self).add_patch(patch)
 
 
 class Series(PatchSeries):
