@@ -45,6 +45,8 @@
           prior patches were applied, or "push -f" was used
     * quilt/refresh.py
         - Fix filenames in the diff header
+        - Remove patch options (-p, -R) from series file to match the
+          refreshed patch.
     * quit/revert.py:
         - Add missing import for Patch class.
         - Handle when there are multiple files in a patch

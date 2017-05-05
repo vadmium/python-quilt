@@ -6,21 +6,19 @@
 
 import os, os.path
 
-from helpers import make_file, swap_dir, tmp_series
-from unittest import TestCase
+from helpers import make_file, QuiltTest, swap_dir, tmp_series
 
 import quilt.add
 import quilt.refresh
 
-from quilt.db import Db, Patch
-from quilt.utils import TmpDirectory
+from quilt.db import Db, Patch, Series
 
 
-class Test(TestCase):
+class Test(QuiltTest):
 
     def test_refresh(self):
-        with TmpDirectory() as dir, \
-                swap_dir(dir.get_name()):
+        with tmp_series() as [dir, series], \
+                swap_dir(dir):
             db = Db(".pc")
             db.create()
             backup = os.path.join(".pc", "patch")
@@ -28,11 +26,13 @@ class Test(TestCase):
             make_file(b"", backup, "file")
             db.add_patch(Patch("patch"))
             db.save()
-            make_file(b"", "patch")
+            series.add_patches(db.applied_patches())
+            series.save()
             make_file(b"added\n", "file")
-            cmd = quilt.refresh.Refresh(".", ".pc", ".")
+            cmd = quilt.refresh.Refresh(".",
+                ".pc", quilt_patches=series.dirname)
             cmd.refresh()
-            with open("patch", "r") as patch:
+            with open(os.path.join(series.dirname, "patch"), "r") as patch:
                 self.assertTrue(patch.read(30))
 
     def test_add_subdir_nonexistent(self):
@@ -55,3 +55,16 @@ class Test(TestCase):
             with open(patch, "rb") as patch:
                 patch = patch.read()
             self.assertIn(b"contents", patch)
+
+    def test_patch_options(self):
+        with tmp_series() as [dir, series]:
+            make_file(b"test.patch -p0 -R\n", series.series_file)
+            applied = Db(dir)
+            applied.add_patch(Patch("test.patch"))
+            applied.save()
+            q = quilt.add.Add(dir, applied.dirname, series.dirname)
+            q.add_file("test-file")
+            make_file(b"contents\n", dir, "test-file")
+            q = quilt.refresh.Refresh(dir, applied.dirname, series.dirname)
+            q.refresh()
+            self.assert_series_lines(series, (b"test.patch",))

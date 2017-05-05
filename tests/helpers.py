@@ -29,6 +29,12 @@ class QuiltTest(unittest.TestCase):
         runner = unittest.TextTestRunner()
         runner.run(cls.suite())
 
+    def assert_series_lines(self, series, lines):
+        with open(series.series_file, "rb") as file:
+            # Ignore newline differences
+            actual = file.read().splitlines()
+        self.assertSequenceEqual(actual, lines)
+
 
 @contextmanager
 def tmp_series():
