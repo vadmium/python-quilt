@@ -19,6 +19,11 @@ import tempfile
 
 from quilt.error import QuiltError
 
+try:  # Python 3: getargspec() is deprecated
+    _getargspec = inspect.getfullargspec
+except AttributeError:  # Python < 3
+    _getargspec = inspect.getargspec
+
 if str is bytes:  # Python < 3
     def _encode_str(s):
         return s
@@ -28,6 +33,21 @@ else:  # Python 3
 
     def _encode_str(s):
         return s.encode(_encoding)
+
+
+class _EqBase(object):
+    """ Helpers for defining __eq__ in Python < 3
+    
+    This class prevents inheriting the default Python 2 hashing
+    implementation, which would give different hashes for different but
+    equivalent objects. This avoids a DeprecationWarning and imitates how
+    Python 3 disables hashing whenever __eq__ is overridden.
+    """
+    __hash__ = None
+    
+    def __ne__(self, other):
+        """ Defers to __eq__, imitating Python 3 """
+        return not self.__eq__(other)
 
 
 class SubprocessError(QuiltError):
@@ -44,7 +64,7 @@ class SubprocessError(QuiltError):
         retval = "Command %s finished with return code %d" % (self.command,
                                                               self.returncode)
         if self.output:
-            retval += "Output was: '%s'" % self.output
+            retval += "; output was: '%s'" % self.output
         return retval
 
 
@@ -64,11 +84,16 @@ class Process(object):
             kw["stdin"] = subprocess.PIPE
         if suppress_output:
             kw["stdout"] = open(os.devnull, "w")
-            kw["stderr"] = open(os.devnull, "w")
+            kw["stderr"] = kw["stdout"]
         try:
-            process = subprocess.Popen(self.cmd, **kw)
+            try:
+                process = subprocess.Popen(self.cmd, **kw)
+            finally:
+                if suppress_output:
+                    kw["stdout"].close()
         except OSError as e:
-            raise SubprocessError(self.cmd, e.errno, e.strerror)
+            msg = "Failed starting command {!r}: {}".format(self.cmd, e)
+            raise QuiltError(msg)
 
         if inputdata is not None:
             process.stdin.write(inputdata)
@@ -320,7 +345,7 @@ class FunctionWrapper(object):
 
     def _get_varnames(self):
         if inspect.isfunction(self.func):
-            return inspect.getargspec(self.func)[0]
+            return _getargspec(self.func).args
         elif isinstance(self.func, FunctionWrapper):
             return self.func._get_varnames()
 

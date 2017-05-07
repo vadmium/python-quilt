@@ -6,6 +6,8 @@
 #
 # See LICENSE comming with the source of python-quilt for details.
 
+import os.path
+
 from quilt.command import Command
 from quilt.db import Db, Series
 from quilt.error import NoPatchesInSeries, AllPatchesApplied, QuiltError
@@ -35,9 +37,6 @@ class Push(Command):
         patch_file = self.quilt_patches + File(patch_name)
         refresh = File(pc_dir.get_name() + "~refresh")
 
-        if refresh.exists():
-            raise QuiltError("Patch %s needs to be refreshed" % patch_name)
-
         forced = False
         self.applying_patch(patch)
 
@@ -45,16 +44,14 @@ class Push(Command):
             try:
                 patch.run(self.cwd, patch_dir=self.quilt_patches, backup=True,
                           prefix=pc_dir.get_name(), quiet=quiet)
-                refresh.delete_if_exists()
             except SubprocessError as e:
-                refresh.touch()
-
                 if not force:
                     patch = RollbackPatch(self.cwd, pc_dir)
                     patch.rollback()
                     patch.delete_backup()
                     raise QuiltError("Patch %s does not apply" % patch_name)
                 else:
+                    refresh.touch()
                     forced = True
 
         self.db.add_patch(patch)
@@ -78,6 +75,14 @@ class Push(Command):
     def _check(self):
         if not self.series.exists() or not self.series.patches():
             raise NoPatchesInSeries(self.series)
+        
+        top = self.db.top_patch()
+        if top is not None:
+            refresh = top.get_name() + "~refresh"
+            refresh = os.path.join(self.quilt_pc.get_name(), refresh)
+            if os.path.exists(refresh):
+                raise QuiltError("Patch %s needs to be refreshed" % \
+                                      top.get_name())
 
     def apply_patch(self, patch_name, force=False, quiet=False):
         """ Apply all patches up to patch_name """
@@ -88,17 +93,18 @@ class Push(Command):
         applied = self.db.applied_patches()
         for patch in applied:
             if patch in patches:
-                patches.remove(applied)
+                patches.remove(patch)
 
         if not patches:
             raise AllPatchesApplied(self.series, self.db.top_patch())
 
         self.applying(patch)
 
-        for cur_patch in patches:
-            self._apply_patch(cur_patch, force, quiet)
-
-        self.db.save()
+        try:
+            for cur_patch in patches:
+                self._apply_patch(cur_patch, force, quiet)
+        finally:
+            self.db.save()
 
         self.applied(self.db.top_patch())
 
@@ -134,10 +140,11 @@ class Push(Command):
         if not patches:
             raise AllPatchesApplied(self.series, top)
 
-        for patch in patches:
-            self.applying(patch)
-            self._apply_patch(patch, force, quiet)
-
-        self.db.save()
+        try:
+            for patch in patches:
+                self.applying(patch)
+                self._apply_patch(patch, force, quiet)
+        finally:
+            self.db.save()
 
         self.applied(self.db.top_patch())

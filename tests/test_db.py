@@ -11,12 +11,12 @@ import os.path
 from six.moves import cStringIO
 import sys
 
-from helpers import QuiltTest, tmp_mapping
+from helpers import QuiltTest, make_file, tmp_mapping, tmp_series
 
 test_dir = os.path.dirname(__file__)
 sys.path.append(os.path.join(test_dir, os.pardir))
 
-from quilt.db import Db, DBError, DB_VERSION, PatchSeries, Series
+from quilt.db import Db, DBError, DB_VERSION, PatchSeries
 from quilt.db import Patch
 from quilt.utils import TmpDirectory
 
@@ -27,13 +27,25 @@ def patch_list(patch_names):
 
 class DbTest(QuiltTest):
 
+    def test_patch_equivalence(self):
+        a = Patch("same")
+        self.assertTrue(a == a)
+        self.assertFalse(a != a)
+        
+        b = Patch("same")
+        self.assertTrue(a == b)
+        self.assertFalse(a != b)
+        self.assertEqual(hash(a), hash(b))
+        
+        c = Patch("different")
+        self.assertTrue(a != c)
+        self.assertFalse(a == c)
+    
     def test_version(self):
         version = "234\n"
         self.assertTrue(version.startswith(format(DB_VERSION)))
         with TmpDirectory() as dir:
-            file = os.path.join(dir.get_name(), ".version")
-            with open(file, "wb") as file:
-                file.write(version.encode("ascii"))
+            make_file(version.encode("ascii"), dir.get_name(), ".version")
             self.assertRaises(DBError, Db, dir.get_name())
 
     def test_series(self):
@@ -57,12 +69,12 @@ class DbTest(QuiltTest):
         self.assertEqual([], db.patches_before(firstpatch))
         self.assertEqual(patch_list(["firstpatch", "secondpatch"]),
                          db.patches_before(thirdpatch))
-        self.assertEquals(patch_list(["patchwith.patch", "patchwith.diff",
+        self.assertEqual(patch_list(["patchwith.patch", "patchwith.diff",
                           "patchwith", "lastpatch"]),
                           db.patches_after(thirdpatch))
-        self.assertEquals([], db.patches_after(lastpatch))
-        self.assertEquals(None, db.patch_after(lastpatch))
-        self.assertEquals(thirdpatch, db.patch_after(secondpatch))
+        self.assertEqual([], db.patches_after(lastpatch))
+        self.assertEqual(None, db.patch_after(lastpatch))
+        self.assertEqual(thirdpatch, db.patch_after(secondpatch))
         self.assertEqual(patch_list(["firstpatch", "secondpatch",
                          "thirdpatch"]),
                          db.patches_until(thirdpatch))
@@ -75,13 +87,10 @@ class DbTest(QuiltTest):
                          db.patches())
 
     def test_patch_args(self):
-        with TmpDirectory() as dir:
-            series = Series(dir.get_name())
-            with open(series.series_file, "wb") as file:
-                file.write(
-                    b"patch1 -p0 --reverse\n"
-                    b"patch2 --strip=0 -R\n"
-                )
+        with tmp_series() as [dir, series]:
+            make_file(
+                b"patch1 -p0 --reverse\n"
+                b"patch2 --strip=0 -R\n", series.series_file)
             series.read()
             [patch1, patch2] = series.patches()
             self.assertEqual(patch1.strip, "0")
@@ -90,10 +99,8 @@ class DbTest(QuiltTest):
             self.assertIs(patch2.reverse, True)
 
     def test_bad_args(self):
-        with TmpDirectory() as dir:
-            series = Series(dir.get_name())
-            with open(series.series_file, "wb") as file:
-                file.write(b"patch -X\n")
+        with tmp_series() as [dir, series]:
+            make_file(b"patch -X\n", series.series_file)
             with tmp_mapping(vars(sys)) as tmp_sys:
                 tmp_sys.set("stderr", cStringIO())
                 series.read()
@@ -169,7 +176,7 @@ class DbTest(QuiltTest):
 
         self.assertTrue(db.exists())
         self.assertFalse(db.is_empty())
-        self.assertEquals(len(db.patches()), 3)
+        self.assertEqual(len(db.patches()), 3)
 
         patch1 = Patch("patch1")
         patch2 = Patch("patch2")
@@ -187,7 +194,7 @@ class DbTest(QuiltTest):
         self.assertTrue(db.is_patch(patch5))
 
         patchline = db.patch2line[patch5]
-        self.assertEquals(patchline.get_comment(), " my comment")
+        self.assertEqual(patchline.get_comment(), " my comment")
 
 
 if __name__ == "__main__":
