@@ -12,7 +12,7 @@ from quilt.backup import Backup
 from quilt.command import Command
 from quilt.db import Db, Series
 from quilt.error import QuiltError
-from quilt.patch import Diff, Patch
+from quilt.patch import Diff, Patch, Conflicts
 from quilt.signals import Signal
 from quilt.utils import Directory, File, SubprocessError, TmpDirectory
 
@@ -69,7 +69,7 @@ class Revert(Command):
                           work_dir=tmpdir.get_name(),
                           quiet=True, suppress_output=True,
                 )
-            except SubprocessError:
+            except Conflicts:
                 pass  # Expected to fail if there are other files in patch
         return backup_file
 

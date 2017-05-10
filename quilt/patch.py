@@ -359,10 +359,10 @@ class _FilePatcher:
             except EnvironmentError as err:
                 if err.errno != ENOENT:
                     raise
-                raise Conflict(err)
+                raise _Conflict(err)
         else:
             if os.path.exists(self._filename):
-                raise Conflict("File already exists: " + self._filename)
+                raise _Conflict("File already exists: " + self._filename)
             if backup is not None:
                 with open(backup, "w"):
                     pass
@@ -390,14 +390,14 @@ class _FilePatcher:
         for i in range(self._src_lines, begin):
             line = self._src.readline()
             if not line:
-                raise Conflict("Source file too short")
+                raise _Conflict("Source file too short")
             self._src_lines += 1
             if self._dest:
                 self._dest.write(line)
         for [in_src, in_dest, line] in hunk:
             if in_src:
                 if self._src.readline() != line:
-                    raise Conflict("Source line mismatch")
+                    raise _Conflict("Source line mismatch")
                 self._src_lines += 1
             if in_dest and self._dest:
                 self._dest.write(line)
@@ -407,7 +407,7 @@ class _FilePatcher:
             if self._dest:
                 copyfileobj(self._src, self._dest)
             if not self._dest_exists and self._src.read(1):
-                raise Conflict("Extra data in deleted file")
+                raise _Conflict("Extra data in deleted file")
             self._src.close()
         if self._dest:
             self._dest.close()
@@ -427,5 +427,5 @@ class _FilePatcher:
                 os.remove(self._temp_dest)
 
 
-class Conflict(QuiltError):
+class Conflicts(QuiltError):
     pass

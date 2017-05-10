@@ -15,7 +15,7 @@ from sys import stderr
 from quilt.command import Command
 from quilt.db import Db, Series
 from quilt.error import NoPatchesInSeries, AllPatchesApplied, QuiltError
-from quilt.patch import Patch, RollbackPatch, Conflict
+from quilt.patch import Patch, RollbackPatch, Conflicts
 from quilt.signals import Signal
 from quilt.utils import SubprocessError, File, Directory
 
@@ -55,7 +55,7 @@ class Push(Command):
                 patch.run(work_dir=self.cwd,
                     patch_dir=self.quilt_patches.get_name(),
                     backup=pc_dir.get_name(), quiet=quiet)
-            except Conflict as err:
+            except Conflicts as err:
                 print(err, file=stderr)
                 if not force:
                     patch = RollbackPatch(self.cwd, pc_dir)
