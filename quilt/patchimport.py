@@ -28,11 +28,15 @@ class Import(Command):
         top = self.db.top_patch()
         patchlist = []
         for patch in patches:
-            patchlist.append(Patch(patch, reverse=reverse, strip=strip))
+            if strip is not None:
+                patch += " -p" + strip
+            if reverse:
+                patch += " -R"
+            patchlist.append(patch)
         self.series.add_patches(patchlist, top)
         self.series.save()
 
-    def import_patch(self, patch_name, new_name=None):
+    def import_patch(self, patch_name, new_name=None, **options):
         """ Import patch into the patch queue
         The patch is inserted as the next unapplied patch.
         """
@@ -48,9 +52,9 @@ class Import(Command):
         patch_file = File(patch_name)
         dest_file = dest_dir + File(name)
         patch_file.copy(dest_file)
-        self._import_patches([name])
+        self._import_patches([name], **options)
 
-    def import_patches(self, patches):
+    def import_patches(self, patches, **options):
         """ Import several patches into the patch queue """
 
         dest_dir = self.quilt_patches
@@ -63,4 +67,4 @@ class Import(Command):
             patch_file.copy(dest_file)
             patch_names.append(patch_name)
 
-        self._import_patches(patch_names)
+        self._import_patches(patch_names, **options)

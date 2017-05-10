@@ -21,16 +21,22 @@ class PatchImportCommand(Command):
     patchname = OptionArgument("-P", metavar="NAME", dest="patchname",
                                help="Import patch as NAME. This option can "
                                "only be used when importing a single patch.")
+    p = OptionArgument(metavar="LEVELS", help="""specify number of path
+        components to strip from patched file names (one level is stripped by
+        default)""")
+    R = OptionArgument(action="store_true", help="apply patch in reverse")
     patchfile = Argument(nargs="+")
 
     def run(self, args):
         importp = Import(os.getcwd(), self.get_pc_dir(),
                          self.get_patches_dir())
 
+        options = dict(strip=args.p, reverse=args.R)
         if args.patchname:
             if len(args.patchfile) > 1:
                 self.exit_error("It's only possible to rename a patch if one "
                                 "patch will be imported.")
-            importp.import_patch(args.patchfile[0], args.patchname)
+            importp.import_patch(args.patchfile[0], args.patchname,
+                **options)
         else:
-            importp.import_patches(args.patchfile)
+            importp.import_patches(args.patchfile, **options)

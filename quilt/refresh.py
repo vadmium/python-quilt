@@ -92,6 +92,9 @@ class Refresh(Command):
         refresh = self.quilt_pc + File(patch.get_name() + "~refresh")
         refresh.delete_if_exists()
 
+        self.series.replace(patch, Patch(patch.get_name()))
+        self.series.save()
+
         self.refreshed(patch)
 
     def _get_labels(self, file_name, old_file, new_file):

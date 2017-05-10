@@ -104,10 +104,10 @@ class RollbackPatch(object):
             backup_file = self.backup_dir + file
             rollback_file = self.cwd + file
 
-            if not keep:
-                rollback_file.delete_if_exists()
             if not backup_file.is_empty():
                 backup_file.copy(rollback_file)
+            elif not keep:
+                rollback_file.delete_if_exists()
 
     def delete_backup(self):
         self.backup_dir.delete()

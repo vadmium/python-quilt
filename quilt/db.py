@@ -15,6 +15,7 @@ import sys
 
 from quilt.error import QuiltError, UnknownPatch
 from quilt.patch import Patch
+from quilt.utils import _encode_str
 
 DB_VERSION = 2
 
@@ -123,10 +124,10 @@ class PatchSeries(object):
 
     def save(self):
         """ Saves current patches list in the series file """
-        with open(self.series_file, "w") as f:
+        with open(self.series_file, "wb") as f:
             for patchline in self.patchlines:
-                f.write(str(patchline))
-                f.write("\n")
+                f.write(_encode_str(str(patchline)))
+                f.write(b"\n")
 
     def add_patch(self, patch):
         """ Add a patch to the patches list """
@@ -315,10 +316,12 @@ class Db(PatchSeries):
         with open(version_file, "r") as f:
             version = f.read(10)
 
-        if len(version) >= 10 or version.rstrip("\r\n") != str(DB_VERSION):
-            raise DBError("The quilt meta-data version of %r is not supported "
-                          "by python-quilt. Python-quilt only supports "
-                          "version %r" % (version, DB_VERSION))
+        version = version.rstrip("\r\n")
+
+        if len(version) >= 10 or version != str(DB_VERSION):
+            raise DBError("The quilt meta-data version of %s is not supported "
+                          "by python-quilt. python-quilt only supports "
+                          "version %s." % (version, DB_VERSION))
 
 
 class Series(PatchSeries):

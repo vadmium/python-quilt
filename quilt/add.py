@@ -62,17 +62,14 @@ class Add(Command):
     def _backup_file(self, file, patch):
         """ Creates a backup of file """
         dest_dir = self.quilt_pc + patch.get_name()
-        file_dir = file.get_directory()
-        if file_dir:
-            #TODO get relative path
-            dest_dir = dest_dir + file_dir
+        #TODO get relative path?
         backup = Backup()
         backup.backup_file(file, dest_dir, copy_empty=True)
 
     def add_file(self, filename, patch_name=None, ignore=False):
         """ Add file to the patch with patch_name.
         If patch_name is None or empty the topmost patch will be used.
-        Adding an already added patch will raise an QuiltError if ignore is
+        Adding an already-added file will raise a QuiltError if ignore is
         False.
         """
         file = File(filename)
