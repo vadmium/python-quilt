@@ -122,9 +122,10 @@ class Push(Command):
 
         self.applying(patch)
 
-        self._apply_patch(patch, force, quiet)
-
-        self.db.save()
+        try:
+            self._apply_patch(patch, force, quiet)
+        finally:  # May have been force-pushed with an exception
+            self.db.save()
 
         self.applied(self.db.top_patch())
 
