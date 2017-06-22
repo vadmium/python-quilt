@@ -13,7 +13,7 @@ import os.path
 import six
 import sys
 
-from quilt.error import QuiltError, UnknownPatch
+from quilt.error import QuiltError, NoAppliedPatch, UnknownPatch
 from quilt.patch import Patch
 from quilt.utils import _encode_str
 
@@ -322,6 +322,12 @@ class Db(PatchSeries):
             raise DBError("The quilt meta-data version of %s is not supported "
                           "by python-quilt. python-quilt only supports "
                           "version %s." % (version, DB_VERSION))
+
+def _get_top(db):
+    patch = db.top_patch()
+    if patch is None:
+        raise NoAppliedPatch(db)
+    return patch
 
 
 class Series(PatchSeries):

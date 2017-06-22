@@ -11,8 +11,8 @@ import stat
 
 from quilt.backup import Backup
 from quilt.command import Command
-from quilt.db import Db, Series
-from quilt.error import QuiltError, NoAppliedPatch
+from quilt.db import Db, Series, _get_top
+from quilt.error import QuiltError
 from quilt.signals import Signal
 from quilt.utils import Directory, File
 
@@ -80,9 +80,7 @@ class Add(Command):
         if patch_name:
             patch = Patch(patch_name)
         else:
-            patch = self.db.top_patch()
-            if not patch:
-                raise NoAppliedPatch(self.db)
+            patch = _get_top(self.db)
 
         exists = self._file_in_patch(filename, patch, ignore)
         if exists:

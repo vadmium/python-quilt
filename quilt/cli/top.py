@@ -7,7 +7,7 @@
 # See LICENSE comming with the source of python-quilt for details.
 
 from quilt.cli.meta import Command
-from quilt.db import Db
+from quilt.db import Db, _get_top
 
 
 class TopCommand(Command):
@@ -18,8 +18,5 @@ class TopCommand(Command):
 
     def run(self, args):
         db = Db(self.get_pc_dir())
-        top = db.top_patch()
-        if not top:
-            self.exit_error("No patches applied.")
-
+        top = _get_top(db)
         print(top)

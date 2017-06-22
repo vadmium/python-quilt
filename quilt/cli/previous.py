@@ -8,7 +8,7 @@
 
 from quilt.cli.meta import Command
 from quilt.cli.parser import Argument
-from quilt.db import Series, Db
+from quilt.db import Series, Db, _get_top
 from quilt.patch import Patch
 
 
@@ -24,18 +24,13 @@ class PreviousCommand(Command):
         series = Series(self.get_patches_dir())
         db = Db(self.get_pc_dir())
 
-        top = None
         if args.patch:
             top = Patch(args.patch)
         else:
-            if db.exists():
-                top = db.top_patch()
+            top = _get_top(db)
 
-        if not top:
-            self.exit_error("No patches applied.")
+        patch = series.patch_before(top)
+        if not patch:
+            self.exit_error("No patch available before %s." % top)
         else:
-            patch = series.patch_before(top)
-            if not patch:
-                self.exit_error("No patch available before %s." % top)
-            else:
-                print(patch)
+            print(patch)

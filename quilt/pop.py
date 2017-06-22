@@ -7,8 +7,8 @@
 # See LICENSE comming with the source of python-quilt for details.
 
 from quilt.command import Command
-from quilt.db import Db
-from quilt.error import NoAppliedPatch, QuiltError
+from quilt.db import Db, _get_top
+from quilt.error import QuiltError
 from quilt.patch import RollbackPatch, Patch
 from quilt.signals import Signal
 from quilt.utils import Directory, File
@@ -27,10 +27,8 @@ class Pop(Command):
         self.db = Db(quilt_pc)
 
     def _check(self, force=False):
-        if not self.db.exists() or not self.db.patches():
-            raise NoAppliedPatch(self.db)
+        patch = _get_top(self.db)
         if not force:
-            patch = self.db.top_patch()
             pc_dir = self.quilt_pc + patch.get_name()
             refresh = File(pc_dir.get_name() + "~refresh")
             if refresh.exists():

@@ -10,7 +10,7 @@ import os
 
 from quilt.backup import Backup
 from quilt.command import Command
-from quilt.db import Db, Series
+from quilt.db import Db, Series, _get_top
 from quilt.error import QuiltError
 from quilt.patch import Diff, Patch
 from quilt.signals import Signal
@@ -83,10 +83,7 @@ class Revert(Command):
         if patch_name:
             patch = Patch(patch_name)
         else:
-            patch = self.db.top_patch()
-
-            if not patch:
-                raise QuiltError("No patch available. Nothing to revert.")
+            patch = _get_top(self.db)
 
         self._file_in_patch(filename, patch)
         self._file_in_next_patches(filename, patch)

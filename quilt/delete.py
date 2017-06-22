@@ -7,8 +7,8 @@
 # See LICENSE comming with the source of python-quilt for details.
 
 from quilt.command import Command
-from quilt.db import Db, Series
-from quilt.error import NoPatchesInSeries, NoAppliedPatch, UnknownPatch, \
+from quilt.db import Db, Series, _get_top
+from quilt.error import NoPatchesInSeries, UnknownPatch, \
                         QuiltError
 from quilt.patch import Patch
 from quilt.pop import Pop
@@ -82,8 +82,6 @@ class Delete(Command):
         if patch_name:
             patch = Patch(patch_name)
         else:
-            patch = self.db.top_patch()
-            if not patch:
-                raise NoAppliedPatch(self.db)
+            patch = _get_top(self.db)
 
         self._delete_patch(patch, remove=remove, backup=backup)

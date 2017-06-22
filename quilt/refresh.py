@@ -7,7 +7,7 @@
 # See LICENSE comming with the source of python-quilt for details.
 
 from quilt.command import Command
-from quilt.db import Db, Series
+from quilt.db import Db, Series, _get_top
 from quilt.error import QuiltError
 from quilt.patch import Patch, Diff, _generate_patch
 from quilt.signals import Signal
@@ -35,10 +35,7 @@ class Refresh(Command):
         if patch_name:
             patch = Patch(patch_name)
         else:
-            patch = self.db.top_patch()
-
-            if not patch:
-                raise QuiltError("No patch applied. Nothing to refresh.")
+            patch = _get_top(self.db)
 
         pc_dir = self.quilt_pc + patch.get_name()
         patch_file = self.quilt_patches + File(patch.get_name())
