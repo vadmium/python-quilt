@@ -45,8 +45,7 @@ class Refresh(Command):
 
         with TmpFile(prefix="pquilt-") as tmpfile:
             f = tmpfile.open()
-            _generate_patch(self.cwd, self.quilt_pc, self.quilt_patches,
-                f, patch)
+            _generate_patch(self.cwd, self.db, self.series.dirname, f, patch)
 
             if tmpfile.is_empty():
                 raise QuiltError("Nothing to refresh.")

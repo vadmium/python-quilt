@@ -10,7 +10,7 @@ import os
 import os.path
 
 from quilt.utils import Process, DirectoryParam, _EqBase, File, FileParam, \
-                        SubprocessError, _encode_str
+                        SubprocessError, _encode_str, Directory
 
 _INDEX_LINE = \
     b"==================================================================="
@@ -201,8 +201,9 @@ class Diff(object):
         return True
 
 def _generate_patch(cwd, applied, patch_dir, f, patch):
-    pc_dir = applied + patch.get_name()
+    pc_dir = Directory(applied.dirname) + patch.get_name()
     files = pc_dir.content()[1]
+    patch_dir = Directory(patch_dir)
 
     patch_file = patch_dir + File(patch.get_name())
     if patch_file.exists():
