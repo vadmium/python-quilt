@@ -10,7 +10,10 @@ import os
 import os.path
 
 from quilt.utils import Process, DirectoryParam, _EqBase, File, FileParam, \
-                        SubprocessError
+                        SubprocessError, _encode_str
+
+_INDEX_LINE = \
+    b"==================================================================="
 
 
 class Patch(_EqBase):
@@ -196,3 +199,51 @@ class Diff(object):
             else:
                 raise e
         return True
+
+def _generate_patch(cwd, applied, patch_dir, f, patch):
+    pc_dir = applied + patch.get_name()
+    files = pc_dir.content()[1]
+
+    patch_file = patch_dir + File(patch.get_name())
+    if patch_file.exists():
+        header = patch.get_header(patch_dir)
+        f.write(header)
+        f.flush()
+
+    for file_name in files:
+        if file_name == ".timestamp":
+            continue
+        orig_file = pc_dir + File(file_name)
+        new_file = File(file_name)
+        left_label, right_label, index = _get_labels(file_name,
+                                                          orig_file,
+                                                          new_file, cwd=cwd)
+        _write_index(f, index)
+        f.flush()
+
+        diff = Diff(orig_file, new_file)
+        diff.run(cwd, fd=f, left_label=left_label, right_label=right_label)
+
+def _get_labels(file_name, old_file, new_file, cwd):
+    dir = os.path.basename(cwd)
+
+    old_hdr = dir + ".orig/" + file_name
+    new_hdr = dir + "/" + file_name
+
+    index = new_hdr
+
+    if not old_file.exists() or old_file.is_empty():
+        old_hdr = "/dev/null"
+
+    if not new_file.exists() or new_file.is_empty():
+        old_hdr = new_hdr
+        new_hdr = "/dev/null"
+
+    return (old_hdr, new_hdr, index)
+
+def _write_index(f, index):
+    f.write(b"Index: ")
+    f.write(_encode_str(index))
+    f.write(b"\n")
+    f.write(_INDEX_LINE)
+    f.write(b"\n")
