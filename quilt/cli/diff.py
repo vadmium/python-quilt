@@ -36,12 +36,13 @@ class diff(Command):
                         continue
                     file = File(name)
                     (initial + file).copy(base + file)
+                # TODO: tolerate missing patch file
                 target_patch.run(force=True, cwd=None,
                     patch_dir=os.path.abspath(self.get_patches_dir()),
                     work_dir=base, no_backup_if_mismatch=True,
                     quiet=True,
                 )
-                for name in files:
+                for name in files:#TODO: new parameters for generate_patch
                     if name == ".timestamp":
                         continue
                     file = File(name)
