@@ -134,7 +134,7 @@ class Directory(object):
             if not dirname:
                 name = content
             else:
-                name = os.path.join(dirname, content)
+                name = dirname + "/" + content
             path = os.path.join(dir, content)
             if os.path.isdir(path):
                 (newdirs, newfiles) = self._content(startdir, name)
